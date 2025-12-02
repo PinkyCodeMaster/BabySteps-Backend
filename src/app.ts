@@ -36,6 +36,7 @@ app.route('/api/v1/auth', authRouter);
 import organizationRouter from './routes/organization.router';
 import incomeRouter from './routes/income.router';
 import expenseRouter from './routes/expense.router';
+import debtRouter from './routes/debt.router';
 
 // Register organization routes
 app.route('/api/v1/orgs', organizationRouter);
@@ -46,7 +47,9 @@ app.route('/api/v1/orgs', incomeRouter);
 // Register expense routes
 app.route('/api/v1/orgs', expenseRouter);
 
-// TODO: Register debt router
+// Register debt routes
+app.route('/api/v1/orgs', debtRouter);
+
 // TODO: Register calculation router
 // TODO: Register Baby Steps router
 // TODO: Register OpenAPI docs router

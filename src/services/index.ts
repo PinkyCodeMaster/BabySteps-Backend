@@ -4,3 +4,4 @@ export * from "./organization.service";
 export * from "./income.service";
 export * from "./expense.service";
 export * from "./uc.service";
+export * from "./debt.service";

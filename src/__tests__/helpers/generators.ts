@@ -86,3 +86,67 @@ export const expenseUpdateArbitrary = fc.record({
   name: fc.string({ minLength: 1, maxLength: 100 }),
   amount: moneyAmountArbitrary,
 });
+
+/**
+ * Generate valid debt type values
+ */
+export const debtTypeArbitrary = fc.constantFrom(
+  "credit-card",
+  "loan",
+  "overdraft",
+  "ccj",
+  "other"
+);
+
+/**
+ * Generate valid debt status values
+ */
+export const debtStatusArbitrary = fc.constantFrom("active", "paid");
+
+/**
+ * Generate valid debt data
+ */
+export const debtDataArbitrary = fc
+  .boolean()
+  .chain((isCcj) =>
+    isCcj
+      ? fc.record({
+          name: fc.string({ minLength: 1, maxLength: 100 }),
+          type: debtTypeArbitrary,
+          balance: moneyAmountArbitrary,
+          interestRate: fc
+            .double({ min: 0, max: 30, noNaN: true })
+            .map((n) => n.toFixed(2)),
+          minimumPayment: moneyAmountArbitrary,
+          isCcj: fc.constant(true),
+          ccjDeadline: fc
+            .date({ min: new Date("2025-01-01"), max: new Date("2030-12-31") })
+            .map((d) => d.toISOString().split("T")[0]),
+        })
+      : fc.record({
+          name: fc.string({ minLength: 1, maxLength: 100 }),
+          type: debtTypeArbitrary,
+          balance: moneyAmountArbitrary,
+          interestRate: fc
+            .double({ min: 0, max: 30, noNaN: true })
+            .map((n) => n.toFixed(2)),
+          minimumPayment: moneyAmountArbitrary,
+          isCcj: fc.constant(false),
+          ccjDeadline: fc.constant(undefined),
+        })
+  );
+
+/**
+ * Generate partial update data for debt
+ */
+export const debtUpdateArbitrary = fc.record({
+  name: fc.string({ minLength: 1, maxLength: 100 }),
+  balance: moneyAmountArbitrary,
+});
+
+/**
+ * Generate payment amount (smaller than typical debt balance)
+ */
+export const paymentAmountArbitrary = fc
+  .double({ min: 0.01, max: 1000, noNaN: true })
+  .map((n) => n.toFixed(2));
