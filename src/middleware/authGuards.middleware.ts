@@ -8,8 +8,6 @@ import { AppError, ErrorCodes } from "./errorHandler.middleware";
  * These guards check if the authenticated user has the required permissions
  * to access specific endpoints.
  * 
- * Requirements: 2.6
- * - Property 11: Non-admin operations are rejected
  */
 
 /**
@@ -60,7 +58,6 @@ export async function requireOrganization(c: Context, next: Next) {
  * Ensures that the user has admin role in their organization.
  * This should be applied to routes that require admin permissions.
  * 
- * Requirements: 2.6
  * 
  * @throws {AppError} AUTHZ_003 if user is not an admin
  */
@@ -140,9 +137,6 @@ export function requireRole(requiredRole: "admin" | "member" | "viewer") {
  * Ensures that the organization ID in the URL matches the user's organization context.
  * This prevents users from accessing other organizations' data.
  * 
- * Requirements: 2.5, 10.1
- * - Property 10: Organization data isolation
- * - Property 51: Organization filtering on all queries
  * 
  * @throws {AppError} AUTHZ_002 if organization ID doesn't match
  */

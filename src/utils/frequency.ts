@@ -4,7 +4,6 @@ import Decimal from 'decimal.js';
  * Frequency conversion utilities for normalizing income and expense frequencies.
  * Converts various payment frequencies to monthly equivalents for calculations.
  * 
- * Requirements: 3.3, 4.4
  */
 
 /**

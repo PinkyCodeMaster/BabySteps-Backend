@@ -14,7 +14,8 @@ const app = new Hono();
 
 // Apply global middleware in order:
 // 1. Request logging (logs all requests)
-app.use('*', requestLogger());
+app.use('*', requestLog
+  ger());
 
 // 2. CORS (handles cross-origin requests)
 app.use('*', corsMiddleware());
@@ -33,8 +34,15 @@ app.use('/api/v1/auth/*', authRateLimit());
 app.route('/api/v1/auth', authRouter);
 
 // Additional routes will be registered here
-// TODO: Register organization router
-// TODO: Register income router
+import organizationRouter from './routes/organization.router';
+import incomeRouter from './routes/income.router';
+
+// Register organization routes
+app.route('/api/v1/orgs', organizationRouter);
+
+// Register income routes
+app.route('/api/v1/orgs', incomeRouter);
+
 // TODO: Register expense router
 // TODO: Register debt router
 // TODO: Register calculation router

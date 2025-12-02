@@ -95,7 +95,6 @@ function userKeyGenerator(c: Context): string {
 /**
  * Rate limiting middleware factory
  * 
- * Requirements: 10.1
  * 
  * Creates a rate limiter with specified configuration
  * Tracks requests per key (IP or user) within a time window

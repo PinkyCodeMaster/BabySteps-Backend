@@ -2,7 +2,6 @@
  * Date utility functions for handling date operations and calculations.
  * Handles leap years correctly for interest calculations and projections.
  * 
- * Requirements: 12.3
  */
 
 /**

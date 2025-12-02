@@ -11,7 +11,6 @@ import { auth } from "../lib/auth";
  * - Session management
  * - Organization management
  * 
- * Requirements: 1.1, 1.2
  */
 const authRouter = new Hono();
 

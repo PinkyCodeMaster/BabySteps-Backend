@@ -22,9 +22,6 @@ function getAllowedOrigins(): string[] {
  * CORS middleware with strict origin checking
  * Validates requests against ALLOWED_ORIGINS environment variable
  * 
- * Requirements: 10.2, 10.3
- * - Property 52: CORS allows approved domains
- * - Property 53: CORS rejects unapproved domains
  */
 export const corsMiddleware = () => {
   const allowedOrigins = getAllowedOrigins();

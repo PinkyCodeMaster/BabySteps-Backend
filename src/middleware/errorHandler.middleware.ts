@@ -95,8 +95,6 @@ function formatZodError(error: ZodError): Record<string, any> {
 /**
  * Global error handler for Hono's onError hook
  * 
- * Requirements: 10.4
- * - Property 54: Error sanitization
  * 
  * Handles all errors thrown in the application:
  * - Sanitizes error responses to avoid leaking sensitive data

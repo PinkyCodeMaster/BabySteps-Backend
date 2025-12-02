@@ -30,8 +30,6 @@ function formatDuration(ms: number): string {
 /**
  * Request logging middleware
  * 
- * Requirements: 10.4
- * 
  * Logs incoming requests with:
  * - Request ID (for tracing)
  * - HTTP method and path

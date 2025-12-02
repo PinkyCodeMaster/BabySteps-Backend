@@ -32,8 +32,7 @@ declare module "hono" {
  * 
  * Validates the session token and attaches user identity to the request context.
  * Also loads the user's organization membership and role.
- * 
- * Requirements: 1.3, 1.5
+ *
  * 
  * @throws {AppError} AUTH_002 if session is expired
  * @throws {AppError} AUTH_003 if session is not found

@@ -4,7 +4,6 @@ import Decimal from 'decimal.js';
  * Money utility functions for handling currency operations with precision.
  * Uses Decimal.js to avoid floating-point arithmetic errors.
  * 
- * Requirements: 12.1, 12.4, 12.5
  */
 
 // Configure Decimal for money operations
