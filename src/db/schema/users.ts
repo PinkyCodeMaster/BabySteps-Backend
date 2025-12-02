@@ -1,5 +1,7 @@
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -176,3 +178,57 @@ export const invitationRelations = relations(invitation, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+// ============================================================================
+// Zod Schemas for Organization
+// ============================================================================
+
+// Organization schemas
+export const insertOrganizationSchema = createInsertSchema(organization, {
+  name: z.string().min(1, "Organization name is required").max(255),
+});
+
+export const selectOrganizationSchema = createSelectSchema(organization);
+
+// Simplified create organization schema (only name needed from user)
+export const createOrganizationSchema = insertOrganizationSchema.pick({
+  name: true,
+});
+
+export const organizationResponseSchema = selectOrganizationSchema;
+
+// Member schemas
+export const insertMemberSchema = createInsertSchema(member);
+export const selectMemberSchema = createSelectSchema(member);
+
+// Role enum for validation
+export const roleSchema = z.enum(["admin", "member", "viewer"]);
+
+// Invite user schema
+export const inviteUserSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  role: roleSchema.default("member"),
+});
+
+// Update member role schema
+export const updateMemberRoleSchema = z.object({
+  role: roleSchema,
+});
+
+export const memberResponseSchema = selectMemberSchema;
+
+// Invitation schemas
+export const insertInvitationSchema = createInsertSchema(invitation, {
+  email: z.string().email("Invalid email address"),
+});
+
+export const selectInvitationSchema = createSelectSchema(invitation);
+export const invitationResponseSchema = selectInvitationSchema;
+
+// Type exports
+export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;
+export type OrganizationResponse = z.infer<typeof organizationResponseSchema>;
+export type InviteUserInput = z.infer<typeof inviteUserSchema>;
+export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
+export type MemberResponse = z.infer<typeof memberResponseSchema>;
+export type InvitationResponse = z.infer<typeof invitationResponseSchema>;

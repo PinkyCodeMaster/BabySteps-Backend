@@ -9,13 +9,15 @@
     "start": "bun run dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
+    "db:push:test": "bun run scripts/db-push-test.ts",
     "db:verify": "bun run scripts/verify-schema.ts",
     "auth:generate": "npx @better-auth/cli generate --config ./src/lib/auth.ts --output ./src/db/schema/users.ts -y",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "test": "bun test",
     "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage"
+    "test:coverage": "bun test --coverage",
+    "test:setup": "bun run db:push:test"
   },
   "keywords": [
     "debt-snowball",
@@ -34,6 +36,7 @@
     "decimal.js": "^10.6.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
+    "drizzle-zod": "^0.8.3",
     "fast-check": "^4.3.0",
     "hono": "^4.10.7",
     "zod": "^4.1.13"
