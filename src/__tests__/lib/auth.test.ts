@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { auth } from "./auth";
+import { auth } from "../../lib/auth";
 
 /**
  * Basic tests for Better Auth configuration

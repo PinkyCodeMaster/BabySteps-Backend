@@ -5,8 +5,8 @@ import {
   requireAdmin,
   requireMember,
   verifyOrganizationAccess,
-} from "./authGuards.middleware";
-import { AppError, ErrorCodes } from "./errorHandler.middleware";
+} from "../../middleware/authGuards.middleware";
+import { AppError, ErrorCodes } from "../../middleware/errorHandler.middleware";
 
 /**
  * Tests for authorization guards

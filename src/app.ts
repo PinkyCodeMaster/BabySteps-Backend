@@ -35,6 +35,7 @@ app.route('/api/v1/auth', authRouter);
 // Additional routes will be registered here
 import organizationRouter from './routes/organization.router';
 import incomeRouter from './routes/income.router';
+import expenseRouter from './routes/expense.router';
 
 // Register organization routes
 app.route('/api/v1/orgs', organizationRouter);
@@ -42,7 +43,9 @@ app.route('/api/v1/orgs', organizationRouter);
 // Register income routes
 app.route('/api/v1/orgs', incomeRouter);
 
-// TODO: Register expense router
+// Register expense routes
+app.route('/api/v1/orgs', expenseRouter);
+
 // TODO: Register debt router
 // TODO: Register calculation router
 // TODO: Register Baby Steps router

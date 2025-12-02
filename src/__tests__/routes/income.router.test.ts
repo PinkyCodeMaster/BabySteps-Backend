@@ -1,8 +1,8 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { db } from "../db";
-import { organization, member, user, income } from "../db/schema";
+import { db } from "../../db";
+import { organization, member, user, income } from "../../db/schema";
 import { eq } from "drizzle-orm";
-import app from "../app";
+import app from "../../app";
 
 /**
  * Integration tests for Income Router

@@ -10,7 +10,7 @@ import {
   divideMoney,
   roundMoney,
   sumMoney,
-} from "./money";
+} from "../../utils/money";
 
 /**
  * Property-based tests for money utilities

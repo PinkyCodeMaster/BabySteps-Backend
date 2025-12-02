@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from 'bun:test';
-import { checkDatabaseConnection } from './index';
+import { checkDatabaseConnection } from '../../db/index';
 
 describe('Database Connection', () => {
   beforeAll(() => {
@@ -10,7 +10,7 @@ describe('Database Connection', () => {
   });
 
   test('should export db instance', async () => {
-    const { db } = await import('./index');
+    const { db } = await import('../../db/index');
     expect(db).toBeDefined();
   });
 

@@ -6,7 +6,7 @@ import {
   fromMonthlyEquivalent,
   toAnnualTotal,
   type Frequency,
-} from "./frequency";
+} from "../../utils/frequency";
 
 /**
  * Property-based tests for frequency conversion utilities

@@ -1,11 +1,11 @@
 // Load test environment variables first
-import '../../scripts/load-test-env';
+import '../../../scripts/load-test-env';
 
 import { describe, test, expect, beforeEach, beforeAll, afterAll } from 'bun:test';
-import { db } from '../db';
-import { auditLog } from '../db/schema/auditLogs';
-import { user, organization } from '../db/schema/users';
-import { auditService, AuditLogEntry } from './audit.service';
+import { db } from '../../db';
+import { auditLog } from '../../db/schema/auditLogs';
+import { user, organization } from '../../db/schema/users';
+import { auditService, AuditLogEntry } from '../../services/audit.service';
 import { eq } from 'drizzle-orm';
 
 /**

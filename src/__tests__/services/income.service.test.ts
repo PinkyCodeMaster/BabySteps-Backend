@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from "bun:test";
-import { db } from "../db";
-import { organization, member, user, income } from "../db/schema";
-import { incomeService } from "./income.service";
+import { db } from "../../db";
+import { organization, member, user, income } from "../../db/schema";
+import { incomeService } from "../../services/income.service";
 import { eq, and } from "drizzle-orm";
 import Decimal from "decimal.js";
 import fc from "fast-check";

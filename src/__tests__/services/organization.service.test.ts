@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { db } from "../db";
-import { organization, member, user } from "../db/schema";
-import { organizationService } from "./organization.service";
+import { db } from "../../db";
+import { organization, member, user } from "../../db/schema";
+import { organizationService } from "../../services/organization.service";
 import { eq } from "drizzle-orm";
 
 /**

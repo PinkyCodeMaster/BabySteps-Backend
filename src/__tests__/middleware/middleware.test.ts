@@ -7,7 +7,7 @@ import {
   ErrorCodes,
   requestLogger,
   rateLimit,
-} from './index';
+} from '../../middleware/index';
 
 describe('Middleware Tests', () => {
   describe('CORS Middleware', () => {
