@@ -14,8 +14,7 @@ const app = new Hono();
 
 // Apply global middleware in order:
 // 1. Request logging (logs all requests)
-app.use('*', requestLog
-  ger());
+app.use('*', requestLogger());
 
 // 2. CORS (handles cross-origin requests)
 app.use('*', corsMiddleware());
