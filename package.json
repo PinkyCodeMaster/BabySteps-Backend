@@ -7,9 +7,10 @@
     "dev": "bun run --watch src/server.ts",
     "build": "bun build src/server.ts --outdir ./dist --target bun",
     "start": "bun run dist/server.js",
-    "migrate:generate": "drizzle-kit generate",
-    "migrate:push": "drizzle-kit push",
-    "migrate": "bun run src/db/migrate.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:verify": "bun run scripts/verify-schema.ts",
+    "auth:generate": "npx @better-auth/cli generate --config ./src/lib/auth.ts --output ./src/db/schema/users.ts -y",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "test": "bun test",
@@ -24,23 +25,25 @@
     "hono",
     "drizzle"
   ],
-  "author": "",
+  "author": "Scott Jones",
   "license": "MIT",
   "dependencies": {
-    "hono": "^4.0.0",
     "@hono/zod-openapi": "^0.9.0",
-    "drizzle-orm": "^0.29.0",
-    "@neondatabase/serverless": "^0.9.0",
+    "@neondatabase/serverless": "^1.0.2",
     "better-auth": "^0.1.0",
-    "zod": "^3.22.0",
     "decimal.js": "^10.4.3",
-    "fast-check": "^3.15.0"
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "fast-check": "^3.15.0",
+    "hono": "^4.0.0",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "drizzle-kit": "^0.20.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.0.0"
+    "drizzle-kit": "^0.31.7",
+    "eslint": "^8.0.0",
+    "tsx": "^4.21.0"
   }
 }
