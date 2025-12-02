@@ -16,10 +16,11 @@ import { eq } from 'drizzle-orm';
  * 
  * Setup:
  * 1. Create a test database or Neon branch
- * 2. Run migrations: DATABASE_URL=<test-db-url> bun run db:push
- * 3. Run tests: DATABASE_URL=<test-db-url> bun test src/services/audit.service.test.ts
+ * 2. Copy .env.test to .env.test.local and add your test database URL
+ * 3. Run migrations: bun run db:push:test
+ * 4. Run tests: bun test src/services/audit.service.test.ts
  * 
- * See src/services/README.md for detailed setup instructions.
+ * See src/services/README.md or TESTING_SETUP.md for detailed setup instructions.
  */
 describe('AuditService', () => {
   let testUserId: string;

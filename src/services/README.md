@@ -70,10 +70,14 @@ If you're using a local PostgreSQL instance:
    CREATE DATABASE debt_snowball_test;
    ```
 
-#### Step 2: Configure .env.test
+#### Step 2: Configure .env.test.local
 
-1. Copy the provided `.env.test` file in the project root
-2. Update the `DATABASE_URL` with your test database connection string:
+1. Copy `.env.test` to `.env.test.local`:
+   ```bash
+   Copy-Item .env.test .env.test.local
+   ```
+
+2. Update the `DATABASE_URL` in `.env.test.local` with your test database connection string:
    ```bash
    # For Neon test branch
    DATABASE_URL=postgresql://user:pass@test-branch.neon.tech/neondb
@@ -81,6 +85,8 @@ If you're using a local PostgreSQL instance:
    # OR for local test database
    DATABASE_URL=postgresql://user:pass@localhost:5432/debt_snowball_test
    ```
+
+**Note:** `.env.test.local` is in `.gitignore` so your credentials stay private.
 
 #### Step 3: Run Migrations on Test Database
 
@@ -94,7 +100,7 @@ Note: Bun will automatically load `.env.test` when `NODE_ENV=test` or you can ma
 ### Running Tests
 
 ```bash
-# Run all tests (automatically uses .env.test if present)
+# Run all tests (automatically uses .env.test.local or .env.test)
 bun test
 
 # Run specific service tests

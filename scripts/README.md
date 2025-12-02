@@ -6,7 +6,7 @@ Utility scripts for database management and testing.
 
 ### `db-push-test.ts`
 
-Pushes database schema to the test database specified in `.env.test`.
+Pushes database schema to the test database specified in `.env.test.local` (or `.env.test` as fallback).
 
 **Usage:**
 ```bash
@@ -16,7 +16,7 @@ bun run test:setup
 ```
 
 **What it does:**
-1. Reads `DATABASE_URL` from `.env.test`
+1. Reads `DATABASE_URL` from `.env.test.local` (or `.env.test` if not found)
 2. Validates the URL is not a placeholder
 3. Runs `drizzle-kit push` with the test database URL
 4. Reports success or failure
@@ -31,7 +31,7 @@ bun run test:setup
 
 ### `load-test-env.ts`
 
-Loads environment variables from `.env.test` for testing.
+Loads environment variables from `.env.test.local` (or `.env.test` as fallback) for testing.
 
 **Usage:**
 ```typescript
@@ -40,12 +40,12 @@ import '../../scripts/load-test-env';
 ```
 
 **What it does:**
-1. Reads `.env.test` file
+1. Reads `.env.test.local` file (or `.env.test` if not found)
 2. Parses environment variables
 3. Sets them in `process.env` (only if not already set)
 4. Logs confirmation
 
-This ensures tests always use the test database configuration.
+This ensures tests always use the test database configuration. Priority: `.env.test.local` > `.env.test`
 
 ### `verify-schema.ts`
 
@@ -61,8 +61,9 @@ bun run db:verify
 ### Initial Setup (One Time)
 
 1. Create a test branch in Neon (or local test database)
-2. Update `.env.test` with test database URL
-3. Push schema to test database:
+2. Copy `.env.test` to `.env.test.local`
+3. Update `.env.test.local` with test database URL
+4. Push schema to test database:
    ```bash
    bun run db:push:test
    ```
@@ -99,16 +100,20 @@ bun test
 
 ## Troubleshooting
 
-### "DATABASE_URL not found in .env.test"
+### "DATABASE_URL not found in .env.test.local"
 
-Create or update `.env.test` with your test database URL:
+Create `.env.test.local` from the template and add your test database URL:
 ```bash
+# Copy template
+Copy-Item .env.test .env.test.local
+
+# Edit .env.test.local
 DATABASE_URL='postgresql://...'
 ```
 
 ### "You are using the placeholder test database URL"
 
-Replace the placeholder in `.env.test` with your actual test database URL from Neon.
+Replace the placeholder in `.env.test.local` with your actual test database URL from Neon.
 
 ### Tests fail with "relation does not exist"
 

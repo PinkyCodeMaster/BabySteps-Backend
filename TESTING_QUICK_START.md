@@ -93,7 +93,7 @@ bun run db:push:test
 Make sure `.env.test.local` exists and has `DATABASE_URL` set. Copy from `.env.test` template if needed.
 
 ### "You are using the placeholder test database URL"
-Update `.env.test` with your actual Neon test branch URL.
+Update `.env.test.local` with your actual Neon test branch URL.
 
 ---
 
