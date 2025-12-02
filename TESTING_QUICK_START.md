@@ -89,8 +89,8 @@ bun run db:push:test
 bun run db:push:test
 ```
 
-### "DATABASE_URL not found in .env.test"
-Make sure `.env.test` exists and has `DATABASE_URL` set.
+### "DATABASE_URL not found in .env.test.local"
+Make sure `.env.test.local` exists and has `DATABASE_URL` set. Copy from `.env.test` template if needed.
 
 ### "You are using the placeholder test database URL"
 Update `.env.test` with your actual Neon test branch URL.
