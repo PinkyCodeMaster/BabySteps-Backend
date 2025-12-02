@@ -28,22 +28,22 @@
   "author": "Scott Jones",
   "license": "MIT",
   "dependencies": {
-    "@hono/zod-openapi": "^0.9.0",
+    "@hono/zod-openapi": "^1.1.5",
     "@neondatabase/serverless": "^1.0.2",
-    "better-auth": "^0.1.0",
-    "decimal.js": "^10.4.3",
+    "better-auth": "^1.4.4",
+    "decimal.js": "^10.6.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
-    "fast-check": "^3.15.0",
-    "hono": "^4.0.0",
-    "zod": "^3.22.0"
+    "fast-check": "^4.3.0",
+    "hono": "^4.10.7",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.48.1",
+    "@typescript-eslint/parser": "^8.48.1",
     "drizzle-kit": "^0.31.7",
-    "eslint": "^8.0.0",
+    "eslint": "^9.39.1",
     "tsx": "^4.21.0"
   }
 }
