@@ -1,12 +1,10 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { incomeService } from "../services";
 import { authMiddleware, getAuthContext } from "../middleware/auth.middleware";
 import {
   createIncomeSchema,
   updateIncomeSchema,
 } from "../db/schema/incomes";
-import { z } from "zod";
 
 /**
  * Income router
@@ -23,19 +21,60 @@ import { z } from "zod";
  * 
  * Requirements: 3.1, 3.5, 3.6
  */
-const incomeRouter = new Hono();
+const incomeRouter = new OpenAPIHono();
 
 // All income routes require authentication
 incomeRouter.use("/*", authMiddleware);
 
-/**
- * Query parameters schema for list endpoint
- */
-const listQuerySchema = z.object({
-  page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1),
-  limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 50),
+// Common schemas
+const OrgIdParamSchema = z.object({
+  orgId: z.string().openapi({ example: 'org_123' }),
+});
+
+const IncomeIdParamSchema = z.object({
+  orgId: z.string().openapi({ example: 'org_123' }),
+  id: z.string().openapi({ example: 'income_456' }),
+});
+
+const ListQuerySchema = z.object({
+  page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1).openapi({ example: '1' }),
+  limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 50).openapi({ example: '50' }),
   sortBy: z.enum(["createdAt", "name", "amount"]).optional(),
   order: z.enum(["asc", "desc"]).optional(),
+});
+
+const IncomeResponseSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  type: z.string(),
+  name: z.string(),
+  amount: z.string(),
+  frequency: z.enum(['one-time', 'weekly', 'fortnightly', 'monthly', 'annual']),
+  isNet: z.boolean(),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+const IncomesListResponseSchema = z.object({
+  incomes: z.array(IncomeResponseSchema),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+  }),
+});
+
+const DeleteResponseSchema = z.object({
+  message: z.string(),
+});
+
+const ErrorResponseSchema = z.object({
+  error: z.object({
+    code: z.string(),
+    message: z.string(),
+  }),
 });
 
 /**
@@ -52,7 +91,37 @@ const listQuerySchema = z.object({
  * Requirements: 3.1
  * Property 10: Organization data isolation
  */
-incomeRouter.get("/:orgId/incomes", zValidator("query", listQuerySchema), async (c) => {
+const listIncomesRoute = createRoute({
+  method: 'get',
+  path: '/:orgId/incomes',
+  tags: ['Incomes'],
+  summary: 'List incomes',
+  description: 'Returns all incomes for an organization with pagination and sorting',
+  request: {
+    params: OrgIdParamSchema,
+    query: ListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: 'List of incomes',
+      content: {
+        'application/json': {
+          schema: IncomesListResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+incomeRouter.openapi(listIncomesRoute, async (c) => {
   const { organizationId } = getAuthContext(c);
   const orgId = c.req.param("orgId");
   const query = c.req.valid("query");
@@ -88,10 +157,43 @@ incomeRouter.get("/:orgId/incomes", zValidator("query", listQuerySchema), async 
  * Requirements: 3.1
  * Property 12: Income creation with organization association
  */
-incomeRouter.post(
-  "/:orgId/incomes",
-  zValidator("json", createIncomeSchema),
-  async (c) => {
+const createIncomeRoute = createRoute({
+  method: 'post',
+  path: '/:orgId/incomes',
+  tags: ['Incomes'],
+  summary: 'Create income',
+  description: 'Creates a new income for an organization',
+  request: {
+    params: OrgIdParamSchema,
+    body: {
+      content: {
+        'application/json': {
+          schema: createIncomeSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Income created',
+      content: {
+        'application/json': {
+          schema: IncomeResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+incomeRouter.openapi(createIncomeRoute, async (c) => {
     const { userId, organizationId } = getAuthContext(c);
     const orgId = c.req.param("orgId");
     const data = c.req.valid("json");
@@ -123,7 +225,36 @@ incomeRouter.post(
  * Requirements: 3.1
  * Property 10: Organization data isolation
  */
-incomeRouter.get("/:orgId/incomes/:id", async (c) => {
+const getIncomeRoute = createRoute({
+  method: 'get',
+  path: '/:orgId/incomes/:id',
+  tags: ['Incomes'],
+  summary: 'Get income',
+  description: 'Returns a single income by ID',
+  request: {
+    params: IncomeIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: 'Income details',
+      content: {
+        'application/json': {
+          schema: IncomeResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+incomeRouter.openapi(getIncomeRoute, async (c) => {
   const { organizationId } = getAuthContext(c);
   const orgId = c.req.param("orgId");
   const incomeId = c.req.param("id");
@@ -154,10 +285,43 @@ incomeRouter.get("/:orgId/incomes/:id", async (c) => {
  * Requirements: 3.5
  * Property 16: Income updates respect organization boundaries
  */
-incomeRouter.patch(
-  "/:orgId/incomes/:id",
-  zValidator("json", updateIncomeSchema),
-  async (c) => {
+const updateIncomeRoute = createRoute({
+  method: 'patch',
+  path: '/:orgId/incomes/:id',
+  tags: ['Incomes'],
+  summary: 'Update income',
+  description: 'Updates an existing income',
+  request: {
+    params: IncomeIdParamSchema,
+    body: {
+      content: {
+        'application/json': {
+          schema: updateIncomeSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated income',
+      content: {
+        'application/json': {
+          schema: IncomeResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+incomeRouter.openapi(updateIncomeRoute, async (c) => {
     const { userId, organizationId } = getAuthContext(c);
     const orgId = c.req.param("orgId");
     const incomeId = c.req.param("id");
@@ -195,7 +359,36 @@ incomeRouter.patch(
  * Requirements: 3.6
  * Property 17: Income deletion triggers recalculation
  */
-incomeRouter.delete("/:orgId/incomes/:id", async (c) => {
+const deleteIncomeRoute = createRoute({
+  method: 'delete',
+  path: '/:orgId/incomes/:id',
+  tags: ['Incomes'],
+  summary: 'Delete income',
+  description: 'Deletes an income',
+  request: {
+    params: IncomeIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: 'Income deleted',
+      content: {
+        'application/json': {
+          schema: DeleteResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+incomeRouter.openapi(deleteIncomeRoute, async (c) => {
   const { userId, organizationId } = getAuthContext(c);
   const orgId = c.req.param("orgId");
   const incomeId = c.req.param("id");

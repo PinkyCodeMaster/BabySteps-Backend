@@ -6,7 +6,7 @@
  */
 
 import { db } from "../../db";
-import { organization, member, user } from "../../db/schema";
+import { organization, member, user, session } from "../../db/schema";
 import { eq } from "drizzle-orm";
 
 export interface TestOrganization {
@@ -14,6 +14,8 @@ export interface TestOrganization {
   adminUserId: string;
   memberUserId: string;
   memberId: string;
+  sessionCookie: string;
+  sessionToken: string;
 }
 
 export interface TestContext {
@@ -32,6 +34,8 @@ export async function createTestOrganization(
   const adminUserId = crypto.randomUUID();
   const memberUserId = crypto.randomUUID();
   const memberId = crypto.randomUUID();
+  const sessionId = crypto.randomUUID();
+  const sessionToken = crypto.randomUUID();
 
   // Create organization
   await db.insert(organization).values({
@@ -89,11 +93,33 @@ export async function createTestOrganization(
     createdAt: new Date(),
   });
 
+  // Create session for admin user
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
+  await db.insert(session).values({
+    id: sessionId,
+    userId: adminUserId,
+    token: sessionToken,
+    expiresAt,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ipAddress: "127.0.0.1",
+    userAgent: "test-agent",
+    activeOrganizationId: orgId,
+    impersonatedBy: null,
+  });
+
+  // Create session cookie string
+  const sessionCookie = `debt_snowball_session=${sessionToken}`;
+
   return {
     orgId,
     adminUserId,
     memberUserId,
     memberId,
+    sessionCookie,
+    sessionToken,
   };
 }
 
@@ -114,6 +140,7 @@ export async function createTestContext(): Promise<TestContext> {
  * Clean up a test organization and its users
  */
 export async function cleanupTestOrganization(testOrg: TestOrganization): Promise<void> {
+  await db.delete(session).where(eq(session.userId, testOrg.adminUserId));
   await db.delete(member).where(eq(member.organizationId, testOrg.orgId));
   await db.delete(organization).where(eq(organization.id, testOrg.orgId));
   await db.delete(user).where(eq(user.id, testOrg.adminUserId));

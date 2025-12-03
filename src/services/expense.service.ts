@@ -2,6 +2,7 @@ import { db } from "../db";
 import { expense } from "../db/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { auditService } from "./audit.service";
+import { snowballService } from "./snowball.service";
 import { AppError, ErrorCodes } from "../middleware/errorHandler.middleware";
 import { toMonthlyEquivalent, type Frequency } from "../utils/frequency";
 import Decimal from "decimal.js";
@@ -72,8 +73,8 @@ export class ExpenseService {
       },
     });
 
-    // TODO: Trigger recalculation when snowball calculation service is ready
-    // This will invalidate cached calculations and update debt-free date projections
+    // Trigger snowball recalculation (expense changes affect disposable income)
+    await snowballService.recalculateSnowballPositions(orgId, db);
 
     return created;
   }
@@ -139,7 +140,8 @@ export class ExpenseService {
       metadata: { changes: data },
     });
 
-    // TODO: Trigger recalculation when snowball calculation service is ready
+    // Trigger snowball recalculation (expense changes affect disposable income)
+    await snowballService.recalculateSnowballPositions(orgId, db);
 
     return updated;
   }
@@ -191,7 +193,8 @@ export class ExpenseService {
       metadata: { name: existing[0]?.name },
     });
 
-    // TODO: Trigger recalculation when snowball calculation service is ready
+    // Trigger snowball recalculation (expense changes affect disposable income)
+    await snowballService.recalculateSnowballPositions(orgId, db);
   }
 
   /**

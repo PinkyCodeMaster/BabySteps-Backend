@@ -28,7 +28,6 @@ import {
  * - Property 28: Status changes are validated and audited
  * - Property 29: Debts ordered by snowball position
  * 
- * Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6
  */
 
 describe("Debt Service - Property Tests", () => {
@@ -50,7 +49,6 @@ describe("Debt Service - Property Tests", () => {
 
   /**
    * Feature: debt-snowball-api, Property 24: Debt creation with active status
-   * Validates: Requirements 5.1
    * 
    * For any valid debt data, creating a debt should store it with status of active
    * and all required fields.
@@ -103,7 +101,6 @@ describe("Debt Service - Property Tests", () => {
 
   /**
    * Feature: debt-snowball-api, Property 25: CCJ debts require deadline
-   * Validates: Requirements 5.2
    * 
    * For any debt marked as CCJ, the system should require a CCJ deadline date
    * and reject creation without it.
@@ -181,7 +178,6 @@ describe("Debt Service - Property Tests", () => {
 
   /**
    * Feature: debt-snowball-api, Property 26: Payment recording reduces balance
-   * Validates: Requirements 5.3
    * 
    * For any debt payment, recording it should reduce the debt balance by the
    * payment amount.
@@ -266,7 +262,6 @@ describe("Debt Service - Property Tests", () => {
 
   /**
    * Feature: debt-snowball-api, Property 27: Zero balance transitions to paid
-   * Validates: Requirements 5.4
    * 
    * For any debt with balance reaching zero, the system should transition the
    * status to paid and exclude it from active calculations.
@@ -380,7 +375,6 @@ describe("Debt Service - Property Tests", () => {
 
   /**
    * Feature: debt-snowball-api, Property 28: Status changes are validated and audited
-   * Validates: Requirements 5.5
    * 
    * For any debt status change, the system should validate the transition is valid
    * and create an audit log entry.
@@ -426,7 +420,6 @@ describe("Debt Service - Property Tests", () => {
 
   /**
    * Feature: debt-snowball-api, Property 29: Debts ordered by snowball position
-   * Validates: Requirements 5.6
    * 
    * For any debt query, the results should be ordered by snowball position.
    */

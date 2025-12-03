@@ -1,8 +1,8 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization } from "better-auth/plugins";
-import { db } from "../db";
+import { organization, openAPI } from "better-auth/plugins";
 import * as schema from "../db/schema";
+import { db } from "../db";
 
 // Get environment variables
 const authSecret = process.env["BETTER_AUTH_SECRET"];
@@ -56,7 +56,7 @@ export const auth = betterAuth({
   secret: authSecret,
   baseURL: authUrl,
   basePath: "/api/v1/auth",
-  
+
   // Advanced session options
   advanced: {
     cookiePrefix: "debt_snowball",
@@ -71,10 +71,10 @@ export const auth = betterAuth({
     organization({
       // Allow users to create organizations
       allowUserToCreateOrganization: true,
-      
+
       // Creator becomes admin automatically
       creatorRole: "admin",
-      
+
       // Send invitation emails (can be configured later)
       sendInvitationEmail: async (data) => {
         // TODO: Implement email sending in future task
@@ -82,8 +82,9 @@ export const auth = betterAuth({
         return Promise.resolve();
       },
     }),
+    openAPI()
   ],
-});
+})
 
 /**
  * Type exports for Better Auth

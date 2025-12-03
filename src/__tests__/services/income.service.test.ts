@@ -191,7 +191,7 @@ describe("Income Service - Property Tests", () => {
    */
   describe("Property 13: Frequency validation for income", () => {
     test("All valid frequency values are accepted", async () => {
-      const validFrequencies = ["one-time", "weekly", "fortnightly", "monthly", "annual"];
+      const validFrequencies = ["one-time", "weekly", "fortnightly", "monthly", "annual"] as const;
 
       for (const frequency of validFrequencies) {
         const created = await incomeService.createIncome(
@@ -201,7 +201,7 @@ describe("Income Service - Property Tests", () => {
             type: "Salary",
             name: `Test Income ${frequency}`,
             amount: "1000.00",
-            frequency: frequency as any,
+            frequency: frequency,
             isNet: false,
           }
         );

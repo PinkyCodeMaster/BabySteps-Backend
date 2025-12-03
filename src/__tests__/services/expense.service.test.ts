@@ -110,7 +110,7 @@ describe("Expense Service - Property Tests", () => {
    */
   describe("Property 19: Expense category validation", () => {
     test("All valid category values are accepted", async () => {
-      const validCategories = ["housing", "utilities", "food", "transport", "insurance", "childcare", "other"];
+      const validCategories = ["housing", "utilities", "food", "transport", "insurance", "childcare", "other"] as const;
 
       for (const category of validCategories) {
         const created = await expenseService.createExpense(
@@ -119,7 +119,7 @@ describe("Expense Service - Property Tests", () => {
           {
             name: `Test Expense ${category}`,
             amount: "100.00",
-            category: category as any,
+            category: category,
             priority: "essential",
             frequency: "monthly",
             isUcPaid: false,
@@ -141,7 +141,7 @@ describe("Expense Service - Property Tests", () => {
    */
   describe("Property 20: Expense priority validation", () => {
     test("All valid priority values are accepted", async () => {
-      const validPriorities = ["essential", "important", "discretionary"];
+      const validPriorities = ["essential", "important", "discretionary"] as const;
 
       for (const priority of validPriorities) {
         const created = await expenseService.createExpense(
@@ -151,7 +151,7 @@ describe("Expense Service - Property Tests", () => {
             name: `Test Expense ${priority}`,
             amount: "100.00",
             category: "other",
-            priority: priority as any,
+            priority: priority,
             frequency: "monthly",
             isUcPaid: false,
           }

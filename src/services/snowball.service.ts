@@ -425,6 +425,66 @@ export class SnowballService {
   ): DebtFreeProjection {
     return projectDebtFreeDate(debts, monthlyPayment);
   }
+
+  /**
+   * Recalculates snowball positions for all debts in an organization
+   * 
+   * This function:
+   * 1. Fetches all active debts for the organization
+   * 2. Orders them by snowball priority
+   * 3. Updates the snowballPosition field on each debt
+   * 4. Returns the updated debts
+   * 
+   * This should be called whenever:
+   * - A debt is created
+   * - A debt is updated (balance, status, etc.)
+   * - A debt is deleted
+   * - A payment is recorded
+   * - Income or expense data changes (affects disposable income)
+   * 
+   * @param orgId - Organization ID
+   * @param db - Database instance
+   * @returns Array of updated debts with new snowball positions
+   * 
+   * Requirements: 6.5
+   * Property 34: Recalculation on financial data changes
+   */
+  async recalculateSnowballPositions(
+    orgId: string,
+    db: any
+  ): Promise<DebtRecord[]> {
+    const { debt } = await import("../db/schema");
+    const { eq, and } = await import("drizzle-orm");
+
+    // Fetch all active debts for the organization
+    const activeDebts = await db
+      .select()
+      .from(debt)
+      .where(and(eq(debt.organizationId, orgId), eq(debt.status, "active")));
+
+    // Order debts by snowball priority
+    const orderedDebts = orderDebts(activeDebts);
+
+    // Update snowball positions
+    const updatedDebts: DebtRecord[] = [];
+    for (let i = 0; i < orderedDebts.length; i++) {
+      const debtRecord = orderedDebts[i]!;
+      const position = i + 1;
+
+      // Update position in database
+      const [updated] = await db
+        .update(debt)
+        .set({ snowballPosition: position })
+        .where(eq(debt.id, debtRecord.id))
+        .returning();
+
+      if (updated) {
+        updatedDebts.push(updated);
+      }
+    }
+
+    return updatedDebts;
+  }
 }
 
 // Export singleton instance

@@ -1,2 +1,5 @@
-// Type definitions will be added here as the project develops
-export {};
+/**
+ * Type definitions for the Debt Snowball API
+ */
+
+export * from './commonSchemas';

@@ -2,6 +2,7 @@ import { db } from "../db";
 import { debt } from "../db/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { auditService } from "./audit.service";
+import { snowballService } from "./snowball.service";
 import { AppError, ErrorCodes } from "../middleware/errorHandler.middleware";
 import Decimal from "decimal.js";
 import type { CreateDebtInput, UpdateDebtInput, RecordPaymentInput } from "../db/schema/debts";
@@ -84,7 +85,8 @@ export class DebtService {
       },
     });
 
-    // TODO: Trigger snowball recalculation when snowball service is ready
+    // Trigger snowball recalculation
+    await snowballService.recalculateSnowballPositions(orgId, db);
 
     return created;
   }
@@ -171,7 +173,8 @@ export class DebtService {
       metadata: { changes: data },
     });
 
-    // TODO: Trigger snowball recalculation when snowball service is ready
+    // Trigger snowball recalculation
+    await snowballService.recalculateSnowballPositions(orgId, db);
 
     return updated;
   }
@@ -293,7 +296,8 @@ export class DebtService {
       });
     }
 
-    // TODO: Trigger snowball recalculation when snowball service is ready
+    // Trigger snowball recalculation
+    await snowballService.recalculateSnowballPositions(orgId, db);
 
     return updated;
   }
@@ -344,7 +348,8 @@ export class DebtService {
       metadata: { name: existing[0]?.name },
     });
 
-    // TODO: Trigger snowball recalculation when snowball service is ready
+    // Trigger snowball recalculation
+    await snowballService.recalculateSnowballPositions(orgId, db);
   }
 
   /**

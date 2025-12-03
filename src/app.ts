@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import healthRouter from './routes/health.router';
 import authRouter from './routes/auth.router';
 import {
@@ -9,8 +9,24 @@ import {
 } from './middleware';
 import { handleError } from './middleware/errorHandler.middleware';
 
-// Create Hono application instance
-const app = new Hono();
+// Create OpenAPIHono application instance with metadata
+const app = new OpenAPIHono({
+  defaultHook: (result, c) => {
+    if (!result.success) {
+      return c.json(
+        {
+          error: {
+            code: 'VAL_001',
+            message: 'Invalid request schema',
+            details: result.error.format(),
+          },
+        },
+        400
+      );
+    }
+    return;
+  },
+});
 
 // Apply global middleware in order:
 // 1. Request logging (logs all requests)
@@ -37,6 +53,8 @@ import organizationRouter from './routes/organization.router';
 import incomeRouter from './routes/income.router';
 import expenseRouter from './routes/expense.router';
 import debtRouter from './routes/debt.router';
+import calculationRouter from './routes/calculation.router';
+import babyStepsRouter from './routes/babySteps.router';
 
 // Register organization routes
 app.route('/api/v1/orgs', organizationRouter);
@@ -50,8 +68,72 @@ app.route('/api/v1/orgs', expenseRouter);
 // Register debt routes
 app.route('/api/v1/orgs', debtRouter);
 
-// TODO: Register calculation router
-// TODO: Register Baby Steps router
-// TODO: Register OpenAPI docs router
+// Register calculation routes
+app.route('/api/v1/orgs', calculationRouter);
+
+// Register Baby Steps routes
+app.route('/api/v1/orgs', babyStepsRouter);
+
+// Configure OpenAPI metadata
+app.doc('/openapi.json', {
+  openapi: '3.1.0',
+  info: {
+    title: 'Debt Snowball API',
+    version: '1.0.0',
+    description: 'A backend system for managing family finances using the debt snowball method and Dave Ramsey\'s Baby Steps framework. Supports multi-user organizations, income and expense tracking, debt management with Universal Credit taper calculations, and debt-free date projections.',
+  },
+  servers: [
+    {
+      url: process.env['BETTER_AUTH_URL'] || 'http://localhost:3000',
+      description: 'API Server',
+    },
+  ],
+  tags: [
+    { name: 'Health', description: 'Health check endpoints' },
+    { name: 'Authentication', description: 'User authentication and session management' },
+    { name: 'Organizations', description: 'Organization and membership management' },
+    { name: 'Incomes', description: 'Income tracking and management' },
+    { name: 'Expenses', description: 'Expense tracking and management' },
+    { name: 'Debts', description: 'Debt tracking and payment management' },
+    { name: 'Calculations', description: 'Financial calculations (snowball, debt-free date, disposable income)' },
+    { name: 'Baby Steps', description: 'Dave Ramsey Baby Steps progress tracking' },
+  ],
+});
+
+// Configure Scalar API documentation UI
+import { Scalar } from '@scalar/hono-api-reference';
+
+app.get(
+  '/docs',
+  Scalar({
+    url: '/openapi.json',
+    layout: 'modern',
+    hideTestRequestButton: true,
+    hideSearch: true,
+    hideModels: true,
+    hideDarkModeToggle: true,
+    hideClientButton: true,
+    expandAllResponses: true,
+    expandAllModelSections: true,
+    theme: 'bluePlanet',
+    showSidebar: true,
+    showDeveloperTools: 'localhost',
+    operationTitleSource: 'summary',
+    persistAuth: false,
+    telemetry: true,
+    isEditable: false,
+    isLoading: false,
+    documentDownloadType: 'both',
+    showOperationId: false,
+    withDefaultFonts: true,
+    defaultOpenAllTags: false,
+    orderSchemaPropertiesBy: 'alpha',
+    orderRequiredPropertiesFirst: true,
+    _integration: 'hono',
+    default: false,
+    slug: 'api-1',
+    title: 'API #1'
+  })
+);
 
 export default app;

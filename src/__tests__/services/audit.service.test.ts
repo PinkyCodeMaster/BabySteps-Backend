@@ -203,9 +203,10 @@ describe('AuditService', () => {
     const logs = await db
       .select()
       .from(auditLog)
-      .where(eq(auditLog.action, 'DEBT_STATUS_CHANGED'));
+      .where(eq(auditLog.userId, testUserId));
 
     expect(logs).toHaveLength(1);
+    expect(logs[0].action).toBe('DEBT_STATUS_CHANGED');
     expect(logs[0].metadata).toEqual(entry.metadata);
   });
 

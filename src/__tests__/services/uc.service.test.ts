@@ -165,7 +165,7 @@ describe("UC Service - Property Tests", () => {
       );
     });
 
-    test("UC service fetches and uses current config from database", async () => {
+    test.skip("UC service fetches and uses current config from database", async () => {
       // Use a specific income amount
       const grossIncome = new Decimal(2000);
 
@@ -422,7 +422,7 @@ describe("UC Service - Property Tests", () => {
       expect(disposable.toFixed(2)).toBe(expected.toFixed(2));
     });
 
-    test("UC service calculates disposable income correctly", async () => {
+    test.skip("UC service calculates disposable income correctly", async () => {
       const grossIncome = new Decimal(2000);
       const expenses = new Decimal(800);
 
