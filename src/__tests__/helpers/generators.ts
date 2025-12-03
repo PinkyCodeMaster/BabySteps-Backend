@@ -118,6 +118,7 @@ export const debtDataArbitrary = fc.oneof(
     isCcj: fc.constant(true as const),
     ccjDeadline: fc
       .date({ min: new Date("2025-01-01"), max: new Date("2030-12-31") })
+      .filter((d) => !isNaN(d.getTime()))
       .map((d) => d.toISOString().split("T")[0]),
   }),
   fc.record({

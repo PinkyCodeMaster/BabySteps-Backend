@@ -1,0 +1,98 @@
+name: Property-Based Tests
+
+on:
+  push:
+    branches: [main, staging, develop]
+  pull_request:
+    branches: [main, staging, develop]
+  schedule:
+    # Run property tests nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  BUN_VERSION: '1.1.38'
+
+jobs:
+  property-tests:
+    name: Run Property-Based Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: debt_snowball_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      
+      - name: Setup test environment
+        run: |
+          cp .env.test.local .env.test
+          echo "DATABASE_URL=postgresql://test_user:test_password@localhost:5432/debt_snowball_test" >> .env.test
+      
+      - name: Run database migrations
+        run: bun run db:push:test
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/debt_snowball_test
+      
+      - name: Run property-based tests (100 iterations)
+        run: bun test --grep "property" --timeout 300000
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/debt_snowball_test
+          BETTER_AUTH_SECRET: test-secret-for-ci-pipeline-minimum-32-chars
+          BETTER_AUTH_URL: http://localhost:9000
+          ALLOWED_ORIGINS: http://localhost:3000
+          NODE_ENV: test
+          LOG_LEVEL: error
+      
+      - name: Run property-based tests (1000 iterations - extended)
+        if: github.event_name == 'schedule'
+        run: bun test --grep "property" --timeout 600000
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/debt_snowball_test
+          BETTER_AUTH_SECRET: test-secret-for-ci-pipeline-minimum-32-chars
+          BETTER_AUTH_URL: http://localhost:9000
+          ALLOWED_ORIGINS: http://localhost:3000
+          NODE_ENV: test
+          LOG_LEVEL: error
+          PROPERTY_TEST_ITERATIONS: 1000
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: property-test-results
+          path: |
+            coverage/
+            test-results/
+          retention-days: 30
+      
+      - name: Notify on failure
+        if: failure() && github.event_name == 'schedule'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: 'Property-based tests failed in nightly run'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

@@ -1,0 +1,73 @@
+services:
+  # Staging Environment
+  - type: web
+    name: debt-snowball-api-staging
+    runtime: docker
+    region: oregon
+    plan: starter
+    branch: staging
+    buildCommand: bun install --frozen-lockfile && bun run build
+    startCommand: bun run db:migrate && bun run start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: BETTER_AUTH_URL
+        value: https://debt-snowball-api-staging.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: https://staging.yourdomain.com
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 9000
+      - key: LOG_LEVEL
+        value: info
+      - key: SENTRY_DSN
+        sync: false
+      - key: REDIS_URL
+        sync: false
+    autoDeploy: true
+
+  # Production Environment
+  - type: web
+    name: debt-snowball-api-production
+    runtime: docker
+    region: oregon
+    plan: standard
+    branch: main
+    buildCommand: bun install --frozen-lockfile && bun run build
+    startCommand: bun run db:migrate && bun run start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: BETTER_AUTH_URL
+        value: https://api.yourdomain.com
+      - key: ALLOWED_ORIGINS
+        value: https://yourdomain.com,https://www.yourdomain.com
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 9000
+      - key: LOG_LEVEL
+        value: warn
+      - key: SENTRY_DSN
+        sync: false
+      - key: REDIS_URL
+        sync: false
+    autoDeploy: true
+
+databases:
+  - name: debt-snowball-postgres-staging
+    databaseName: debt_snowball_staging
+    plan: starter
+    region: oregon
+  
+  - name: debt-snowball-postgres-production
+    databaseName: debt_snowball_production
+    plan: standard
+    region: oregon

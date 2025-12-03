@@ -9,6 +9,7 @@
     "start": "bun run dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
     "db:push:test": "bun run scripts/db-push-test.ts",
     "db:verify": "bun run scripts/verify-schema.ts",
     "auth:generate": "npx @better-auth/cli generate --config ./src/lib/auth.ts --output ./src/db/schema/users.ts -y",
@@ -17,7 +18,12 @@
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
-    "test:setup": "bun run db:push:test"
+    "test:setup": "bun run db:push:test",
+    "deploy:staging": "git push origin staging",
+    "deploy:production": "git push origin main",
+    "smoke:staging": "bash scripts/smoke-tests.sh staging",
+    "smoke:production": "bash scripts/smoke-tests.sh production",
+    "setup:env": "bash scripts/setup-environment.sh"
   },
   "keywords": [
     "debt-snowball",
