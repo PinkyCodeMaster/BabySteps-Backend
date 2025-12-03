@@ -14,6 +14,9 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
+# Ensure drizzle directory exists (create if migrations haven't been generated yet)
+RUN mkdir -p drizzle/meta
+
 # Production image
 FROM base AS runner
 WORKDIR /app
@@ -28,6 +31,9 @@ COPY --from=builder --chown=bunuser:nodejs /app/dist ./dist
 COPY --from=builder --chown=bunuser:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=bunuser:nodejs /app/package.json ./
 COPY --from=builder --chown=bunuser:nodejs /app/drizzle.config.ts ./
+
+# Copy database schema files (needed for migrations at runtime)
+COPY --from=builder --chown=bunuser:nodejs /app/src/db ./src/db
 
 # Switch to non-root user
 USER bunuser

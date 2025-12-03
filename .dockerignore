@@ -55,4 +55,3 @@ docs/
 .editorconfig
 .eslintrc*
 .prettierrc*
-tsconfig.json
