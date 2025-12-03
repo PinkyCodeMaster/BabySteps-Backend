@@ -6,3 +6,4 @@ export * from "./expense.service";
 export * from "./uc.service";
 export * from "./debt.service";
 export * from "./babySteps.service";
+export * from "./export.service";

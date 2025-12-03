@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
-import { organizationService } from "../services";
+import { organizationService, exportService } from "../services";
 import { authMiddleware, getAuthContext } from "../middleware/auth.middleware";
 import { requireAdmin } from "../middleware/authGuards.middleware";
 import { updateMemberRoleSchema } from "../db/schema";
@@ -211,6 +211,71 @@ organizationRouter.openapi(updateMemberRoleRoute, async (c) => {
   );
 
   return c.json(updated, 200);
+});
+
+/**
+ * GET /orgs/:orgId/export
+ * 
+ * Export all organization data (admin only)
+ * 
+ * Requirements: 10.1
+ */
+
+const ExportParamSchema = z.object({
+  orgId: z.string().openapi({ example: 'org_123' }),
+});
+
+const ExportResponseSchema = z.object({
+  organizationId: z.string(),
+  exportedAt: z.string(),
+  data: z.object({
+    incomes: z.array(z.any()),
+    expenses: z.array(z.any()),
+    debts: z.array(z.any()),
+    babySteps: z.any().nullable(),
+    members: z.array(z.any()),
+    invitations: z.array(z.any()),
+  }),
+});
+
+const exportOrganizationRoute = createRoute({
+  method: 'get',
+  path: '/:orgId/export',
+  tags: ['Organizations'],
+  summary: 'Export organization data',
+  description: 'Exports all organization data as JSON (admin only). Used for data portability and GDPR compliance.',
+  request: {
+    params: ExportParamSchema,
+  },
+  responses: {
+    200: {
+      description: 'Organization data export',
+      content: {
+        'application/json': {
+          schema: ExportResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied - admin role required',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+// Apply requireAdmin middleware for export endpoint
+organizationRouter.use("/:orgId/export", requireAdmin);
+
+organizationRouter.openapi(exportOrganizationRoute, async (c) => {
+  const orgId = c.req.param("orgId");
+
+  const exportData = await exportService.exportOrganizationData(orgId);
+
+  return c.json(exportData, 200);
 });
 
 export default organizationRouter;
