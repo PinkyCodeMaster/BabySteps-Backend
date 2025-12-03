@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization, openAPI } from "better-auth/plugins";
 import * as schema from "../db/schema";
 import { db } from "../db";
+import { logger } from './logger';
 
 // Get environment variables
 // Note: These will be validated by config module on server startup
@@ -75,7 +76,7 @@ export const auth = betterAuth({
       // Send invitation emails (can be configured later)
       sendInvitationEmail: async (data) => {
         // TODO: Implement email sending in future task
-        console.log("Invitation email would be sent to:", data.email);
+        logger.info({ email: data.email }, "Invitation email would be sent");
         return Promise.resolve();
       },
     }),

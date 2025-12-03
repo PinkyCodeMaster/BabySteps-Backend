@@ -4,6 +4,7 @@ import { db } from "../db";
 import { member } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { AppError, ErrorCodes } from "./errorHandler.middleware";
+import { setUserContext } from "../lib/sentry";
 
 /**
  * Auth context that gets attached to requests
@@ -67,6 +68,12 @@ export async function authMiddleware(c: Context, next: Next) {
     c.set("userId", session.user.id);
     c.set("user", session.user);
     c.set("session", session.session);
+    
+    // Set user context in Sentry for error tracking
+    setUserContext({
+      id: session.user.id,
+      email: session.user.email,
+    });
 
     // Load user's organization membership and role
     // Check if there's an active organization in the session
@@ -89,6 +96,13 @@ export async function authMiddleware(c: Context, next: Next) {
         const userRole = membership[0].role as "admin" | "member" | "viewer";
         c.set("organizationId", activeOrgId);
         c.set("role", userRole);
+        
+        // Update Sentry user context with organization
+        setUserContext({
+          id: session.user.id,
+          email: session.user.email,
+          organizationId: activeOrgId,
+        });
       }
     }
 

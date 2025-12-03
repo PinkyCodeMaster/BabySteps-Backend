@@ -1,5 +1,7 @@
 import { Context } from 'hono';
 import { ZodError } from 'zod';
+import { logger } from '../lib/logger';
+import { captureException } from '../lib/sentry';
 
 /**
  * Standard error response format
@@ -111,18 +113,34 @@ function formatZodError(error: ZodError): Record<string, any> {
 export const handleError = (error: Error, c: Context) => {
   const isDevelopment = process.env['NODE_ENV'] === 'development';
   
-  // Log error with full context
-  console.error('❌ Error occurred:', {
-    error: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : undefined,
+  // Log error with full context using structured logging
+  logger.error({
+    err: error,
     path: c.req.path,
     method: c.req.method,
-    // Avoid logging sensitive data like passwords
+    requestId: c.get('requestId'),
+    userId: c.get('userId'),
+    organizationId: c.get('organizationId'),
     headers: {
       'user-agent': c.req.header('user-agent'),
       'content-type': c.req.header('content-type'),
     },
-  });
+  }, 'Request error occurred');
+  
+  // Capture error in Sentry (except for expected validation errors)
+  if (!(error instanceof ZodError) && !(error instanceof AppError && error.statusCode < 500)) {
+    captureException(error, {
+      request: {
+        path: c.req.path,
+        method: c.req.method,
+        requestId: c.get('requestId'),
+      },
+      user: {
+        userId: c.get('userId'),
+        organizationId: c.get('organizationId'),
+      },
+    });
+  }
   
   let statusCode = 500;
   let errorCode: string = ErrorCodes.SRV_INTERNAL_ERROR;

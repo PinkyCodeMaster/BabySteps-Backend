@@ -55,6 +55,7 @@ import expenseRouter from './routes/expense.router';
 import debtRouter from './routes/debt.router';
 import calculationRouter from './routes/calculation.router';
 import babyStepsRouter from './routes/babySteps.router';
+import userRouter from './routes/user.router';
 
 // Register organization routes
 app.route('/api/v1/orgs', organizationRouter);
@@ -74,6 +75,9 @@ app.route('/api/v1/orgs', calculationRouter);
 // Register Baby Steps routes
 app.route('/api/v1/orgs', babyStepsRouter);
 
+// Register user routes
+app.route('/api/v1/users', userRouter);
+
 // Configure OpenAPI metadata
 app.doc('/openapi.json', {
   openapi: '3.1.0',
@@ -92,6 +96,7 @@ app.doc('/openapi.json', {
     { name: 'Health', description: 'Health check endpoints' },
     { name: 'Authentication', description: 'User authentication and session management' },
     { name: 'Organizations', description: 'Organization and membership management' },
+    { name: 'Users', description: 'User account management and deletion' },
     { name: 'Incomes', description: 'Income tracking and management' },
     { name: 'Expenses', description: 'Expense tracking and management' },
     { name: 'Debts', description: 'Debt tracking and payment management' },
@@ -108,7 +113,7 @@ app.get(
   Scalar({
     url: '/openapi.json',
     servers: [{ url: process.env['BETTER_AUTH_URL'] || 'http://localhost:9000' }],
-    layout: 'classic',
+    layout: 'modern',
     hideTestRequestButton: false,
     hideSearch: false,
     hideModels: false,

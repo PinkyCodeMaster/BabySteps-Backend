@@ -3,6 +3,7 @@ import { debt } from "../db/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { auditService } from "./audit.service";
 import { snowballService } from "./snowball.service";
+import { getCacheService } from "./cache.service";
 import { AppError, ErrorCodes } from "../middleware/errorHandler.middleware";
 import { withTransaction } from "../db/transaction";
 import Decimal from "decimal.js";
@@ -88,6 +89,10 @@ export class DebtService {
 
     // Trigger snowball recalculation
     await snowballService.recalculateSnowballPositions(orgId, db);
+
+    // Invalidate calculation caches
+    const cacheService = getCacheService();
+    await cacheService.invalidateOrgCalculations(orgId);
 
     return created;
   }
@@ -176,6 +181,10 @@ export class DebtService {
 
     // Trigger snowball recalculation
     await snowballService.recalculateSnowballPositions(orgId, db);
+
+    // Invalidate calculation caches
+    const cacheService = getCacheService();
+    await cacheService.invalidateOrgCalculations(orgId);
 
     return updated;
   }
@@ -303,6 +312,10 @@ export class DebtService {
       // Trigger snowball recalculation (within transaction)
       await snowballService.recalculateSnowballPositions(orgId, tx);
 
+      // Invalidate calculation caches (after transaction commits)
+      const cacheService = getCacheService();
+      await cacheService.invalidateOrgCalculations(orgId);
+
       return updated;
     });
   }
@@ -355,6 +368,10 @@ export class DebtService {
 
     // Trigger snowball recalculation
     await snowballService.recalculateSnowballPositions(orgId, db);
+
+    // Invalidate calculation caches
+    const cacheService = getCacheService();
+    await cacheService.invalidateOrgCalculations(orgId);
   }
 
   /**

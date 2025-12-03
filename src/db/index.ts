@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
+import { logger } from '../lib/logger';
 
 // Get database URL from environment
 // Note: This will be validated by config module on server startup
@@ -18,7 +19,7 @@ export async function checkDatabaseConnection(): Promise<boolean> {
     await sql`SELECT 1 as health_check`;
     return true;
   } catch (error) {
-    console.error('Database connection failed:', error);
+    logger.error({ err: error }, 'Database connection failed');
     return false;
   }
 }

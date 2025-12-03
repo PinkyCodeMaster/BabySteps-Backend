@@ -5,6 +5,7 @@ import { incomeService } from "../services/income.service";
 import { expenseService } from "../services/expense.service";
 import { ucService } from "../services/uc.service";
 import { snowballService } from "../services/snowball.service";
+import { getCacheService } from "../services/cache.service";
 
 /**
  * Calculation router
@@ -158,6 +159,17 @@ calculationRouter.openapi(snowballRoute, async (c) => {
     );
   }
 
+  // Try to get from cache first
+  const cacheService = getCacheService();
+  const cacheKey = cacheService.getSnowballKey(orgId);
+  
+  if (cacheService.isEnabled()) {
+    const cached = await cacheService.get<any>(cacheKey);
+    if (cached) {
+      return c.json(cached, 200);
+    }
+  }
+
   // Fetch active debts
   const activeDebts = await debtService.getActiveDebts(orgId);
 
@@ -186,6 +198,11 @@ calculationRouter.openapi(snowballRoute, async (c) => {
     totalMonthlyPayment: paymentSchedule.totalMonthlyPayment.toFixed(2),
     disposableIncome: disposableIncome.toFixed(2),
   };
+
+  // Cache the result for 5 minutes (300 seconds)
+  if (cacheService.isEnabled()) {
+    await cacheService.set(cacheKey, response, 300);
+  }
 
   return c.json(response, 200);
 });
@@ -250,6 +267,17 @@ calculationRouter.openapi(debtFreeDateRoute, async (c) => {
     );
   }
 
+  // Try to get from cache first
+  const cacheService = getCacheService();
+  const cacheKey = cacheService.getDebtFreeDateKey(orgId);
+  
+  if (cacheService.isEnabled()) {
+    const cached = await cacheService.get<any>(cacheKey);
+    if (cached) {
+      return c.json(cached, 200);
+    }
+  }
+
   // Fetch active debts
   const activeDebts = await debtService.getActiveDebts(orgId);
 
@@ -285,6 +313,11 @@ calculationRouter.openapi(debtFreeDateRoute, async (c) => {
       })),
     })),
   };
+
+  // Cache the result for 5 minutes (300 seconds)
+  if (cacheService.isEnabled()) {
+    await cacheService.set(cacheKey, response, 300);
+  }
 
   return c.json(response, 200);
 });
@@ -350,6 +383,17 @@ calculationRouter.openapi(disposableIncomeRoute, async (c) => {
     );
   }
 
+  // Try to get from cache first
+  const cacheService = getCacheService();
+  const cacheKey = cacheService.getDisposableIncomeKey(orgId);
+  
+  if (cacheService.isEnabled()) {
+    const cached = await cacheService.get<any>(cacheKey);
+    if (cached) {
+      return c.json(cached, 200);
+    }
+  }
+
   // Calculate income, expenses, and UC taper
   const grossIncome = await incomeService.getMonthlyTotal(orgId);
   const totalExpenses = await expenseService.getMonthlyTotal(orgId, true); // Exclude UC-paid
@@ -363,6 +407,11 @@ calculationRouter.openapi(disposableIncomeRoute, async (c) => {
     ucTaper: ucTaper.toFixed(2),
     disposableIncome: disposableIncome.toFixed(2),
   };
+
+  // Cache the result for 5 minutes (300 seconds)
+  if (cacheService.isEnabled()) {
+    await cacheService.set(cacheKey, response, 300);
+  }
 
   return c.json(response, 200);
 });

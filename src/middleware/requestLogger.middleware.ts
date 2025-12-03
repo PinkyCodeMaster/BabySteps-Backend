@@ -1,4 +1,5 @@
 import { Context, Next } from 'hono';
+import { logger } from '../lib/logger';
 
 /**
  * Generate a unique request ID
@@ -8,23 +9,12 @@ function generateRequestId(): string {
 }
 
 /**
- * Get color for status code (for terminal output)
+ * Get log level based on status code
  */
-function getStatusColor(status: number): string {
-  if (status >= 500) return '\x1b[31m'; // Red
-  if (status >= 400) return '\x1b[33m'; // Yellow
-  if (status >= 300) return '\x1b[36m'; // Cyan
-  if (status >= 200) return '\x1b[32m'; // Green
-  return '\x1b[0m'; // Reset
-}
-
-/**
- * Format duration in human-readable format
- */
-function formatDuration(ms: number): string {
-  if (ms < 1) return `${(ms * 1000).toFixed(0)}µs`;
-  if (ms < 1000) return `${ms.toFixed(2)}ms`;
-  return `${(ms / 1000).toFixed(2)}s`;
+function getLogLevel(status: number): 'info' | 'warn' | 'error' {
+  if (status >= 500) return 'error';
+  if (status >= 400) return 'warn';
+  return 'info';
 }
 
 /**
@@ -56,7 +46,12 @@ export const requestLogger = () => {
     const path = c.req.path;
     
     // Log incoming request
-    console.log(`📥 [${requestId}] ${method} ${path}`);
+    logger.debug({
+      requestId,
+      method,
+      path,
+      userAgent: c.req.header('user-agent'),
+    }, 'Incoming request');
     
     try {
       // Process request
@@ -70,33 +65,40 @@ export const requestLogger = () => {
       const userId = c.get('userId');
       const organizationId = c.get('organizationId');
       
-      // Build log message
-      const statusColor = getStatusColor(status);
-      const resetColor = '\x1b[0m';
+      // Determine log level based on status code
+      const logLevel = getLogLevel(status);
       
-      const contextInfo = [];
-      if (userId) contextInfo.push(`userId=${userId}`);
-      if (organizationId) contextInfo.push(`orgId=${organizationId}`);
+      // Log response with structured data
+      logger[logLevel]({
+        requestId,
+        method,
+        path,
+        status,
+        duration,
+        userId,
+        organizationId,
+      }, 'Request completed');
       
-      const contextStr = contextInfo.length > 0 ? ` [${contextInfo.join(', ')}]` : '';
-      
-      // Log response
-      console.log(
-        `📤 [${requestId}] ${method} ${path} ${statusColor}${status}${resetColor} ${formatDuration(duration)}${contextStr}`
-      );
-      
-      // Log detailed info for slow requests (>1s)
+      // Log warning for slow requests (>1s)
       if (duration > 1000) {
-        console.warn(`⚠️  Slow request detected: ${method} ${path} took ${formatDuration(duration)}`);
+        logger.warn({
+          requestId,
+          method,
+          path,
+          duration,
+        }, 'Slow request detected');
       }
     } catch (error) {
       // Calculate duration even on error
       const duration = Date.now() - startTime;
       
-      // Log error (error handler will log details)
-      console.error(
-        `❌ [${requestId}] ${method} ${path} ERROR ${formatDuration(duration)}`
-      );
+      // Log error (error handler will log full details)
+      logger.error({
+        requestId,
+        method,
+        path,
+        duration,
+      }, 'Request failed with error');
       
       // Re-throw to let error handler middleware handle it
       throw error;

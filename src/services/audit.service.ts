@@ -1,6 +1,7 @@
 import { db } from '../db';
 import { auditLog } from '../db/schema/auditLogs';
 import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+import { logger } from '../lib/logger';
 
 /**
  * Audit log entry data structure
@@ -60,8 +61,10 @@ export class AuditService {
       });
     } catch (error) {
       // Log the error but don't throw - audit logging should not break the main operation
-      console.error('Failed to write audit log:', error);
-      console.error('Audit entry:', entry);
+      logger.error({
+        err: error,
+        entry,
+      }, 'Failed to write audit log');
     }
   }
 }

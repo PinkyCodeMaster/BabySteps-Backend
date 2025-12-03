@@ -3,6 +3,7 @@ import { expense } from "../db/schema";
 import { eq, and, desc, asc } from "drizzle-orm";
 import { auditService } from "./audit.service";
 import { snowballService } from "./snowball.service";
+import { getCacheService } from "./cache.service";
 import { AppError, ErrorCodes } from "../middleware/errorHandler.middleware";
 import { toMonthlyEquivalent, type Frequency } from "../utils/frequency";
 import Decimal from "decimal.js";
@@ -76,6 +77,10 @@ export class ExpenseService {
     // Trigger snowball recalculation (expense changes affect disposable income)
     await snowballService.recalculateSnowballPositions(orgId, db);
 
+    // Invalidate calculation caches
+    const cacheService = getCacheService();
+    await cacheService.invalidateOrgCalculations(orgId);
+
     return created;
   }
 
@@ -143,6 +148,10 @@ export class ExpenseService {
     // Trigger snowball recalculation (expense changes affect disposable income)
     await snowballService.recalculateSnowballPositions(orgId, db);
 
+    // Invalidate calculation caches
+    const cacheService = getCacheService();
+    await cacheService.invalidateOrgCalculations(orgId);
+
     return updated;
   }
 
@@ -195,6 +204,10 @@ export class ExpenseService {
 
     // Trigger snowball recalculation (expense changes affect disposable income)
     await snowballService.recalculateSnowballPositions(orgId, db);
+
+    // Invalidate calculation caches
+    const cacheService = getCacheService();
+    await cacheService.invalidateOrgCalculations(orgId);
   }
 
   /**

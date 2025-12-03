@@ -20,7 +20,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   // Logging Configuration
-  LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent']).optional(),
 
   // Optional: Sentry Error Tracking
   SENTRY_DSN: z.string().url('SENTRY_DSN must be a valid URL').optional(),

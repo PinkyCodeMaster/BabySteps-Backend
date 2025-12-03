@@ -1,5 +1,6 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi';
 import { checkDatabaseConnection } from '../db';
+import { logger } from '../lib/logger';
 
 // Create health check router
 const healthRouter = new OpenAPIHono();
@@ -63,7 +64,7 @@ healthRouter.openapi(healthRoute, async (c) => {
       },
     }, statusCode);
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error({ err: error }, 'Health check error');
     
     return c.json({
       status: 'unhealthy' as const,

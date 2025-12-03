@@ -1,4 +1,5 @@
 import { cors } from 'hono/cors';
+import { logger } from '../lib/logger';
 
 /**
  * Parse ALLOWED_ORIGINS from environment variable
@@ -8,7 +9,7 @@ function getAllowedOrigins(): string[] {
   const originsEnv = process.env['ALLOWED_ORIGINS'] || '';
   
   if (!originsEnv) {
-    console.warn('⚠️  ALLOWED_ORIGINS not set, defaulting to localhost:3000');
+    logger.warn('ALLOWED_ORIGINS not set, defaulting to localhost:3000');
     return ['http://localhost:3000'];
   }
   
@@ -26,7 +27,7 @@ function getAllowedOrigins(): string[] {
 export const corsMiddleware = () => {
   const allowedOrigins = getAllowedOrigins();
   
-  console.log('🔒 CORS configured with allowed origins:', allowedOrigins);
+  logger.info({ allowedOrigins }, 'CORS configured');
   
   return cors({
     origin: (origin) => {
