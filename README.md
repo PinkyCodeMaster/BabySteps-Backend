@@ -130,10 +130,24 @@ bun test --grep "property"
 
 ## Documentation
 
-- [Environment Variables](./ENVIRONMENT_VARIABLES.md) - Complete guide to all environment variables
-- [Deployment Guide](./DEPLOYMENT.md) - Step-by-step deployment instructions for staging and production
+### Setup & Configuration
 - [Setup Guide](./SETUP.md) - Initial project setup documentation
+- [Environment Variables](./ENVIRONMENT_VARIABLES.md) - Complete guide to all environment variables
+- [Environment Setup](./ENVIRONMENT_SETUP.md) - Detailed environment configuration for staging and production
+
+### Deployment
+- [Deployment Guide](./DEPLOYMENT.md) - Step-by-step deployment instructions for all platforms
+- [Deployment Checklist](./DEPLOYMENT_CHECKLIST.md) - Pre-deployment verification checklist
+- [Docker Build Notes](./DOCKER_BUILD_NOTES.md) - Docker build guide and troubleshooting
+- [Docker Fix Summary](./DOCKER_FIX_SUMMARY.md) - Recent Docker build fix details
+
+### CI/CD & Monitoring
+- [CI/CD Setup](./CI_CD_SETUP.md) - Complete CI/CD pipeline configuration
+- [Monitoring & Alerts](./MONITORING_ALERTS.md) - Comprehensive monitoring and alerting setup
+
+### Testing & Development
 - [Testing Guide](./TESTING_SETUP.md) - Testing infrastructure and guidelines
+- [Testing Quick Start](./TESTING_QUICK_START.md) - Quick guide to running tests
 - [Logging Guide](./LOGGING_SETUP.md) - Logging configuration and best practices
 
 ## License

@@ -281,6 +281,10 @@ The repository includes configuration for multiple deployment platforms:
 
 **Configuration**: `Dockerfile`, `.dockerignore`
 
+**Prerequisites**:
+- Docker Desktop installed and running
+- Migrations generated (optional): `bun run db:generate`
+
 **Build and run**:
 
 ```bash
@@ -295,6 +299,8 @@ docker run -d \
   --name debt-snowball-api \
   debt-snowball-api
 ```
+
+**Note**: See [DOCKER_BUILD_NOTES.md](./DOCKER_BUILD_NOTES.md) for detailed Docker build information, troubleshooting, and the recent drizzle directory fix.
 
 **Docker Compose** (with PostgreSQL and Redis):
 
