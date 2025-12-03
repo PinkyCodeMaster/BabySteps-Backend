@@ -1,12 +1,10 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { expenseService } from "../services";
 import { authMiddleware, getAuthContext } from "../middleware/auth.middleware";
 import {
   createExpenseSchema,
   updateExpenseSchema,
 } from "../db/schema/expenses";
-import { z } from "zod";
 
 /**
  * Expense router
@@ -23,22 +21,63 @@ import { z } from "zod";
  * 
  * Requirements: 4.1
  */
-const expenseRouter = new Hono();
+const expenseRouter = new OpenAPIHono();
 
 // All expense routes require authentication
 expenseRouter.use("/*", authMiddleware);
 
-/**
- * Query parameters schema for list endpoint
- */
-const listQuerySchema = z.object({
-  page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1),
-  limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 50),
-  sortBy: z.enum(["createdAt", "name", "amount"]).optional(),
-  order: z.enum(["asc", "desc"]).optional(),
-  category: z.string().optional(),
-  priority: z.string().optional(),
-  isUcPaid: z.string().optional().transform(val => val === "true" ? true : val === "false" ? false : undefined),
+// Common schemas
+const OrgIdParamSchema = z.object({
+  orgId: z.string().openapi({ example: 'org_123' }),
+});
+
+const ExpenseIdParamSchema = z.object({
+  orgId: z.string().openapi({ example: 'org_123' }),
+  id: z.string().openapi({ example: 'expense_456' }),
+});
+
+const ListQuerySchema = z.object({
+  page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1).openapi({ example: '1' }),
+  limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 50).openapi({ example: '50' }),
+  sortBy: z.enum(["createdAt", "name", "amount"]).optional().openapi({ example: 'createdAt' }),
+  order: z.enum(["asc", "desc"]).optional().openapi({ example: 'desc' }),
+  category: z.string().optional().openapi({ example: 'housing' }),
+  priority: z.string().optional().openapi({ example: 'high' }),
+  isUcPaid: z.string().optional().transform(val => val === "true" ? true : val === "false" ? false : undefined).openapi({ example: 'false' }),
+});
+
+const ExpenseResponseSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  name: z.string(),
+  amount: z.string(),
+  frequency: z.string(),
+  category: z.string(),
+  priority: z.string(),
+  isUcPaid: z.boolean(),
+  dueDay: z.number().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+const ExpensesListResponseSchema = z.object({
+  expenses: z.array(ExpenseResponseSchema),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+  }),
+});
+
+const MessageResponseSchema = z.object({
+  message: z.string(),
+});
+
+const ErrorResponseSchema = z.object({
+  error: z.object({
+    code: z.string(),
+    message: z.string(),
+  }),
 });
 
 /**
@@ -46,19 +85,40 @@ const listQuerySchema = z.object({
  * 
  * List all expenses for an organization with pagination, sorting, and filtering.
  * 
- * Query parameters:
- * - page: Page number (default: 1)
- * - limit: Items per page (default: 50)
- * - sortBy: Sort field (createdAt, name, amount)
- * - order: Sort order (asc, desc)
- * - category: Filter by category
- * - priority: Filter by priority
- * - isUcPaid: Filter by UC-paid status (true/false)
- * 
  * Requirements: 4.1
  * Property 10: Organization data isolation
  */
-expenseRouter.get("/:orgId/expenses", zValidator("query", listQuerySchema), async (c) => {
+const listExpensesRoute = createRoute({
+  method: 'get',
+  path: '/:orgId/expenses',
+  tags: ['Expenses'],
+  summary: 'List expenses',
+  description: 'Returns all expenses for an organization with pagination, sorting, and filtering',
+  request: {
+    params: OrgIdParamSchema,
+    query: ListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: 'List of expenses',
+      content: {
+        'application/json': {
+          schema: ExpensesListResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+expenseRouter.openapi(listExpensesRoute, async (c) => {
   const { organizationId } = getAuthContext(c);
   const orgId = c.req.param("orgId");
   const query = c.req.valid("query");
@@ -97,32 +157,64 @@ expenseRouter.get("/:orgId/expenses", zValidator("query", listQuerySchema), asyn
  * Requirements: 4.1
  * Property 18: Expense creation with organization association
  */
-expenseRouter.post(
-  "/:orgId/expenses",
-  zValidator("json", createExpenseSchema),
-  async (c) => {
-    const { userId, organizationId } = getAuthContext(c);
-    const orgId = c.req.param("orgId");
-    const data = c.req.valid("json");
-
-    // Verify user is accessing their own organization
-    if (orgId !== organizationId) {
-      return c.json(
-        {
-          error: {
-            code: "AUTHZ_002",
-            message: "Organization not found or access denied",
-          },
+const createExpenseRoute = createRoute({
+  method: 'post',
+  path: '/:orgId/expenses',
+  tags: ['Expenses'],
+  summary: 'Create expense',
+  description: 'Creates a new expense for an organization',
+  request: {
+    params: OrgIdParamSchema,
+    body: {
+      content: {
+        'application/json': {
+          schema: createExpenseSchema,
         },
-        403
-      );
-    }
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Created expense',
+      content: {
+        'application/json': {
+          schema: ExpenseResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
 
-    const created = await expenseService.createExpense(orgId, userId, data);
+expenseRouter.openapi(createExpenseRoute, async (c) => {
+  const { userId, organizationId } = getAuthContext(c);
+  const orgId = c.req.param("orgId");
+  const data = c.req.valid("json");
 
-    return c.json(created, 201);
+  // Verify user is accessing their own organization
+  if (orgId !== organizationId) {
+    return c.json(
+      {
+        error: {
+          code: "AUTHZ_002",
+          message: "Organization not found or access denied",
+        },
+      },
+      403
+    );
   }
-);
+
+  const created = await expenseService.createExpense(orgId, userId, data);
+
+  return c.json(created, 201);
+});
 
 /**
  * GET /orgs/:orgId/expenses/:id
@@ -132,7 +224,36 @@ expenseRouter.post(
  * Requirements: 4.1
  * Property 10: Organization data isolation
  */
-expenseRouter.get("/:orgId/expenses/:id", async (c) => {
+const getExpenseRoute = createRoute({
+  method: 'get',
+  path: '/:orgId/expenses/:id',
+  tags: ['Expenses'],
+  summary: 'Get expense',
+  description: 'Returns a single expense by ID',
+  request: {
+    params: ExpenseIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: 'Expense details',
+      content: {
+        'application/json': {
+          schema: ExpenseResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+expenseRouter.openapi(getExpenseRoute, async (c) => {
   const { organizationId } = getAuthContext(c);
   const orgId = c.req.param("orgId");
   const expenseId = c.req.param("id");
@@ -163,38 +284,70 @@ expenseRouter.get("/:orgId/expenses/:id", async (c) => {
  * Requirements: 4.1
  * Property 18: Expense creation with organization association
  */
-expenseRouter.patch(
-  "/:orgId/expenses/:id",
-  zValidator("json", updateExpenseSchema),
-  async (c) => {
-    const { userId, organizationId } = getAuthContext(c);
-    const orgId = c.req.param("orgId");
-    const expenseId = c.req.param("id");
-    const data = c.req.valid("json");
-
-    // Verify user is accessing their own organization
-    if (orgId !== organizationId) {
-      return c.json(
-        {
-          error: {
-            code: "AUTHZ_002",
-            message: "Organization not found or access denied",
-          },
+const updateExpenseRoute = createRoute({
+  method: 'patch',
+  path: '/:orgId/expenses/:id',
+  tags: ['Expenses'],
+  summary: 'Update expense',
+  description: 'Updates an existing expense',
+  request: {
+    params: ExpenseIdParamSchema,
+    body: {
+      content: {
+        'application/json': {
+          schema: updateExpenseSchema,
         },
-        403
-      );
-    }
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated expense',
+      content: {
+        'application/json': {
+          schema: ExpenseResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
 
-    const updated = await expenseService.updateExpense(
-      expenseId,
-      orgId,
-      userId,
-      data
+expenseRouter.openapi(updateExpenseRoute, async (c) => {
+  const { userId, organizationId } = getAuthContext(c);
+  const orgId = c.req.param("orgId");
+  const expenseId = c.req.param("id");
+  const data = c.req.valid("json");
+
+  // Verify user is accessing their own organization
+  if (orgId !== organizationId) {
+    return c.json(
+      {
+        error: {
+          code: "AUTHZ_002",
+          message: "Organization not found or access denied",
+        },
+      },
+      403
     );
-
-    return c.json(updated, 200);
   }
-);
+
+  const updated = await expenseService.updateExpense(
+    expenseId,
+    orgId,
+    userId,
+    data
+  );
+
+  return c.json(updated, 200);
+});
 
 /**
  * DELETE /orgs/:orgId/expenses/:id
@@ -203,7 +356,36 @@ expenseRouter.patch(
  * 
  * Requirements: 4.1
  */
-expenseRouter.delete("/:orgId/expenses/:id", async (c) => {
+const deleteExpenseRoute = createRoute({
+  method: 'delete',
+  path: '/:orgId/expenses/:id',
+  tags: ['Expenses'],
+  summary: 'Delete expense',
+  description: 'Deletes an expense',
+  request: {
+    params: ExpenseIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: 'Expense deleted',
+      content: {
+        'application/json': {
+          schema: MessageResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+expenseRouter.openapi(deleteExpenseRoute, async (c) => {
   const { userId, organizationId } = getAuthContext(c);
   const orgId = c.req.param("orgId");
   const expenseId = c.req.param("id");

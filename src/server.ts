@@ -1,7 +1,13 @@
 import app from './app';
+import { validateEnv, getConfig } from './config';
 
-// Get port from environment or use default
-const port = parseInt(process.env['PORT'] || '9000', 10);
+// Validate environment configuration on startup
+// This will fail fast if any required variables are missing or invalid
+validateEnv();
+
+// Get validated configuration
+const config = getConfig();
+const port = config.PORT;
 
 // Start Bun server
 const server = Bun.serve({

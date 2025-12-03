@@ -2,11 +2,8 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import { neon } from '@neondatabase/serverless';
 
 // Get database URL from environment
+// Note: This will be validated by config module on server startup
 const databaseUrl = process.env["DATABASE_URL"]!;
-
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
 
 // Create Neon HTTP client
 const sql = neon(databaseUrl);

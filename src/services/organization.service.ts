@@ -2,6 +2,7 @@ import { db } from "../db";
 import { organization, member } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { auditService } from "./audit.service";
+import { withTransaction } from "../db/transaction";
 import { AppError, ErrorCodes } from "../middleware/errorHandler.middleware";
 
 /**
@@ -140,6 +141,7 @@ export class OrganizationService {
   /**
    * Update a member's role (admin only)
    * 
+   * Updates member role within a transaction to ensure atomicity with audit logging.
    * Better Auth may handle role updates, but this provides additional validation
    * and audit logging.
    * 
@@ -150,6 +152,7 @@ export class OrganizationService {
    * @returns Updated membership
    * @throws {AppError} if requester is not an admin
    * 
+   * Requirements: 2.3, 2.4
    */
   async updateMemberRole(
     membershipId: string,
@@ -157,80 +160,83 @@ export class OrganizationService {
     requesterId: string,
     orgId: string
   ): Promise<typeof member.$inferSelect> {
-    // Verify requester is an admin
-    const requesterMembership = await db
-      .select()
-      .from(member)
-      .where(
-        and(eq(member.userId, requesterId), eq(member.organizationId, orgId))
-      )
-      .limit(1);
+    // Use transaction to ensure atomicity
+    return await withTransaction(async (tx) => {
+      // Verify requester is an admin
+      const requesterMembership = await tx
+        .select()
+        .from(member)
+        .where(
+          and(eq(member.userId, requesterId), eq(member.organizationId, orgId))
+        )
+        .limit(1);
 
-    if (requesterMembership.length === 0 || requesterMembership[0]?.role !== "admin") {
-      throw new AppError(
-        ErrorCodes.AUTHZ_ADMIN_ROLE_REQUIRED,
-        "Only admins can update member roles",
-        403
-      );
-    }
+      if (requesterMembership.length === 0 || requesterMembership[0]?.role !== "admin") {
+        throw new AppError(
+          ErrorCodes.AUTHZ_ADMIN_ROLE_REQUIRED,
+          "Only admins can update member roles",
+          403
+        );
+      }
 
-    // Fetch the membership to update
-    const membershipToUpdate = await db
-      .select()
-      .from(member)
-      .where(eq(member.id, membershipId))
-      .limit(1);
+      // Fetch the membership to update
+      const membershipToUpdate = await tx
+        .select()
+        .from(member)
+        .where(eq(member.id, membershipId))
+        .limit(1);
 
-    if (membershipToUpdate.length === 0) {
-      throw new AppError(
-        ErrorCodes.RES_NOT_FOUND,
-        "Membership not found",
-        404
-      );
-    }
+      if (membershipToUpdate.length === 0) {
+        throw new AppError(
+          ErrorCodes.RES_NOT_FOUND,
+          "Membership not found",
+          404
+        );
+      }
 
-    // Verify membership belongs to the organization
-    if (membershipToUpdate[0]?.organizationId !== orgId) {
-      throw new AppError(
-        ErrorCodes.AUTHZ_ORGANIZATION_ACCESS_DENIED,
-        "Membership does not belong to this organization",
-        403
-      );
-    }
+      // Verify membership belongs to the organization
+      if (membershipToUpdate[0]?.organizationId !== orgId) {
+        throw new AppError(
+          ErrorCodes.AUTHZ_ORGANIZATION_ACCESS_DENIED,
+          "Membership does not belong to this organization",
+          403
+        );
+      }
 
-    const oldRole = membershipToUpdate[0].role;
+      const oldRole = membershipToUpdate[0].role;
 
-    // Update the role
-    await db
-      .update(member)
-      .set({ role: newRole })
-      .where(eq(member.id, membershipId));
+      // Update the role
+      await tx
+        .update(member)
+        .set({ role: newRole })
+        .where(eq(member.id, membershipId));
 
-    // Log the role change
-    await auditService.log({
-      userId: requesterId,
-      organizationId: orgId,
-      action: "ROLE_CHANGED",
-      affectedRecordIds: [membershipId],
-      metadata: { oldRole, newRole, targetUserId: membershipToUpdate[0].userId },
+      // Log the role change (within transaction)
+      await auditService.log({
+        userId: requesterId,
+        organizationId: orgId,
+        action: "ROLE_CHANGED",
+        affectedRecordIds: [membershipId],
+        metadata: { oldRole, newRole, targetUserId: membershipToUpdate[0].userId },
+      }, tx);
+
+      // Fetch and return updated membership
+      const updated = await tx
+        .select()
+        .from(member)
+        .where(eq(member.id, membershipId))
+        .limit(1);
+
+      if (!updated[0]) {
+        throw new AppError(
+          ErrorCodes.SRV_INTERNAL_ERROR,
+          "Failed to update membership",
+          500
+        );
+      }
+
+      return updated[0];
     });
-
-    // Fetch and return updated membership
-    const updated = await db
-      .select()
-      .from(member)
-      .where(eq(member.id, membershipId))
-      .limit(1);
-
-    if (!updated[0]) {
-      throw new AppError(
-        ErrorCodes.SRV_INTERNAL_ERROR,
-        "Failed to update membership",
-        500
-      );
-    }
-
-    return updated[0];
   }
 
   /**

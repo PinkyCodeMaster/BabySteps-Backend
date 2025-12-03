@@ -443,7 +443,7 @@ export class SnowballService {
    * - Income or expense data changes (affects disposable income)
    * 
    * @param orgId - Organization ID
-   * @param db - Database instance
+   * @param dbClient - Database instance or transaction context
    * @returns Array of updated debts with new snowball positions
    * 
    * Requirements: 6.5
@@ -451,13 +451,13 @@ export class SnowballService {
    */
   async recalculateSnowballPositions(
     orgId: string,
-    db: any
+    dbClient: any
   ): Promise<DebtRecord[]> {
     const { debt } = await import("../db/schema");
     const { eq, and } = await import("drizzle-orm");
 
     // Fetch all active debts for the organization
-    const activeDebts = await db
+    const activeDebts = await dbClient
       .select()
       .from(debt)
       .where(and(eq(debt.organizationId, orgId), eq(debt.status, "active")));
@@ -472,7 +472,7 @@ export class SnowballService {
       const position = i + 1;
 
       // Update position in database
-      const [updated] = await db
+      const [updated] = await dbClient
         .update(debt)
         .set({ snowballPosition: position })
         .where(eq(debt.id, debtRecord.id))

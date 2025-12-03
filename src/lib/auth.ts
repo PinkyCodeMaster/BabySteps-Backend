@@ -5,12 +5,9 @@ import * as schema from "../db/schema";
 import { db } from "../db";
 
 // Get environment variables
-const authSecret = process.env["BETTER_AUTH_SECRET"];
+// Note: These will be validated by config module on server startup
+const authSecret = process.env["BETTER_AUTH_SECRET"]!;
 const authUrl = process.env["BETTER_AUTH_URL"] || "http://localhost:9000";
-
-if (!authSecret) {
-  throw new Error("BETTER_AUTH_SECRET environment variable is required");
-}
 
 /**
  * Better Auth configuration with organization plugin

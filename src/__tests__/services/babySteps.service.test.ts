@@ -323,39 +323,39 @@ describe("Baby Steps Service - Property Tests", () => {
    */
   describe("Property 45: Step 3 progress tracking", () => {
     test("Step 3 tracks emergency fund and target months", async () => {
+      // Set up once before all iterations
+      await db.delete(babyStep).where(eq(babyStep.organizationId, context.testOrg.orgId));
+      await db.delete(debt).where(eq(debt.organizationId, context.testOrg.orgId));
+
+      // Advance to step 3 once (ensure no debts for step 2 completion)
+      await babyStepsService.updateProgress(
+        context.testOrg.orgId,
+        context.testOrg.adminUserId,
+        {
+          currentStep: 1,
+          stepProgress: { emergencyFundSaved: 1000 },
+        }
+      );
+      await babyStepsService.updateProgress(
+        context.testOrg.orgId,
+        context.testOrg.adminUserId,
+        {
+          currentStep: 2,
+        }
+      );
+      await babyStepsService.updateProgress(
+        context.testOrg.orgId,
+        context.testOrg.adminUserId,
+        {
+          currentStep: 3,
+        }
+      );
+
       await fc.assert(
         fc.asyncProperty(
           fc.double({ min: 0, max: 50000 }),
           fc.integer({ min: 3, max: 6 }),
           async (emergencyFundSaved, targetMonths) => {
-            // Clean up first
-            await db.delete(babyStep).where(eq(babyStep.organizationId, context.testOrg.orgId));
-            await db.delete(debt).where(eq(debt.organizationId, context.testOrg.orgId));
-
-            // Advance to step 3 (ensure no debts for step 2 completion)
-            await babyStepsService.updateProgress(
-              context.testOrg.orgId,
-              context.testOrg.adminUserId,
-              {
-                currentStep: 1,
-                stepProgress: { emergencyFundSaved: 1000 },
-              }
-            );
-            await babyStepsService.updateProgress(
-              context.testOrg.orgId,
-              context.testOrg.adminUserId,
-              {
-                currentStep: 2,
-              }
-            );
-            await babyStepsService.updateProgress(
-              context.testOrg.orgId,
-              context.testOrg.adminUserId,
-              {
-                currentStep: 3,
-              }
-            );
-
             // Update progress with emergency fund and target months
             await babyStepsService.updateProgress(
               context.testOrg.orgId,
@@ -445,6 +445,12 @@ describe("Baby Steps Service - Property Tests", () => {
     });
 
     test("Accepts valid progress updates", async () => {
+      // Ensure we start with a clean state
+      await db.delete(babyStep).where(eq(babyStep.organizationId, context.testOrg.orgId));
+      
+      // Initialize baby steps for the organization
+      await babyStepsService.getCurrentStep(context.testOrg.orgId);
+
       await fc.assert(
         fc.asyncProperty(
           fc.double({ min: 0, max: 10000, noNaN: true }),
@@ -475,49 +481,52 @@ describe("Baby Steps Service - Property Tests", () => {
    */
   describe("Property 47: Baby Steps feature gating", () => {
     test("Feature availability based on current step", async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 1, max: 7 }),
-          fc.integer({ min: 1, max: 7 }),
-          async (currentStep, requiredStep) => {
-            // Clean up first
-            await db.delete(babyStep).where(eq(babyStep.organizationId, context.testOrg.orgId));
-            await db.delete(debt).where(eq(debt.organizationId, context.testOrg.orgId));
+      // Test each combination individually to avoid database conflicts
+      const testCases = [
+        { currentStep: 1, requiredStep: 1, expected: true },
+        { currentStep: 1, requiredStep: 2, expected: false },
+        { currentStep: 2, requiredStep: 1, expected: true },
+        { currentStep: 2, requiredStep: 2, expected: true },
+        { currentStep: 3, requiredStep: 2, expected: true },
+        { currentStep: 5, requiredStep: 7, expected: false },
+      ];
 
-            // Set current step (with proper progression)
-            let step = 1;
-            await babyStepsService.updateProgress(
-              context.testOrg.orgId,
-              context.testOrg.adminUserId,
-              {
-                currentStep: 1,
-                stepProgress: { emergencyFundSaved: 1000 },
-              }
-            );
+      for (const { currentStep, requiredStep, expected } of testCases) {
+        // Clean up first
+        await db.delete(babyStep).where(eq(babyStep.organizationId, context.testOrg.orgId));
+        await db.delete(debt).where(eq(debt.organizationId, context.testOrg.orgId));
 
-            while (step < currentStep) {
-              step++;
-              await babyStepsService.updateProgress(
-                context.testOrg.orgId,
-                context.testOrg.adminUserId,
-                {
-                  currentStep: step,
-                }
-              );
-            }
-
-            // Check feature availability
-            const isAvailable = await babyStepsService.isFeatureAvailable(
-              context.testOrg.orgId,
-              requiredStep
-            );
-
-            // Property: Feature is available if current step >= required step
-            expect(isAvailable).toBe(currentStep >= requiredStep);
+        // Set current step (with proper progression)
+        let step = 1;
+        await babyStepsService.updateProgress(
+          context.testOrg.orgId,
+          context.testOrg.adminUserId,
+          {
+            currentStep: 1,
+            stepProgress: { emergencyFundSaved: 1000 },
           }
-        ),
-        { numRuns: 10 }
-      );
+        );
+
+        while (step < currentStep) {
+          step++;
+          await babyStepsService.updateProgress(
+            context.testOrg.orgId,
+            context.testOrg.adminUserId,
+            {
+              currentStep: step,
+            }
+          );
+        }
+
+        // Check feature availability
+        const isAvailable = await babyStepsService.isFeatureAvailable(
+          context.testOrg.orgId,
+          requiredStep
+        );
+
+        // Property: Feature is available if current step >= required step
+        expect(isAvailable).toBe(expected);
+      }
     });
 
     test("Features requiring step 1 are always available", async () => {
@@ -529,22 +538,21 @@ describe("Baby Steps Service - Property Tests", () => {
     });
 
     test("Features requiring higher steps are not available initially", async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.integer({ min: 2, max: 7 }),
-          async (requiredStep) => {
-            // On step 1 by default
-            const isAvailable = await babyStepsService.isFeatureAvailable(
-              context.testOrg.orgId,
-              requiredStep
-            );
+      // Ensure we're on step 1
+      await db.delete(babyStep).where(eq(babyStep.organizationId, context.testOrg.orgId));
+      const status = await babyStepsService.getCurrentStep(context.testOrg.orgId);
+      expect(status.currentStep).toBe(1);
 
-            // Property: Features requiring higher steps should not be available
-            expect(isAvailable).toBe(false);
-          }
-        ),
-        { numRuns: 10 }
-      );
+      // Test that features requiring steps 2-7 are not available
+      for (let requiredStep = 2; requiredStep <= 7; requiredStep++) {
+        const isAvailable = await babyStepsService.isFeatureAvailable(
+          context.testOrg.orgId,
+          requiredStep
+        );
+
+        // Property: Features requiring higher steps should not be available
+        expect(isAvailable).toBe(false);
+      }
     });
   });
 

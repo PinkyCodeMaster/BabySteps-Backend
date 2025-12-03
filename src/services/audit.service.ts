@@ -1,5 +1,6 @@
 import { db } from '../db';
 import { auditLog } from '../db/schema/auditLogs';
+import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 
 /**
  * Audit log entry data structure
@@ -34,6 +35,7 @@ export class AuditService {
    * Log an audit entry to the database
    * 
    * @param entry - The audit log entry data
+   * @param tx - Optional transaction context for atomic operations
    * @returns Promise that resolves when the log is written
    * 
    * @example
@@ -45,9 +47,10 @@ export class AuditService {
    *   metadata: { amount: 100.00, previousBalance: 1000.00, newBalance: 900.00 }
    * });
    */
-  async log(entry: AuditLogEntry): Promise<void> {
+  async log(entry: AuditLogEntry, tx?: NeonHttpDatabase): Promise<void> {
     try {
-      await db.insert(auditLog).values({
+      const dbClient = tx || db;
+      await dbClient.insert(auditLog).values({
         id: crypto.randomUUID(),
         userId: entry.userId,
         organizationId: entry.organizationId,

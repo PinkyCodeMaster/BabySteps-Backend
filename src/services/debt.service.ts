@@ -4,6 +4,7 @@ import { eq, and, desc, asc } from "drizzle-orm";
 import { auditService } from "./audit.service";
 import { snowballService } from "./snowball.service";
 import { AppError, ErrorCodes } from "../middleware/errorHandler.middleware";
+import { withTransaction } from "../db/transaction";
 import Decimal from "decimal.js";
 import type { CreateDebtInput, UpdateDebtInput, RecordPaymentInput } from "../db/schema/debts";
 
@@ -182,13 +183,14 @@ export class DebtService {
   /**
    * Record a payment on a debt
    * 
-   * Records a payment:
+   * Records a payment within a transaction:
    * - Updates balance
    * - Checks if balance reaches zero
    * - Transitions status to paid if balance is zero
-   * - Creates audit log
+   * - Creates audit logs
+   * - Recalculates snowball positions
    * 
-   * Note: Transaction support will be added when using neon-serverless driver
+   * All operations are wrapped in a transaction to ensure atomicity.
    * 
    * @param id - Debt ID
    * @param orgId - Organization ID
@@ -208,98 +210,101 @@ export class DebtService {
     userId: string,
     paymentData: RecordPaymentInput
   ): Promise<typeof debt.$inferSelect> {
-    // Fetch debt
-    const [existingDebt] = await db
-      .select()
-      .from(debt)
-      .where(and(eq(debt.id, id), eq(debt.organizationId, orgId)))
-      .limit(1);
+    // Use transaction to ensure atomicity
+    return await withTransaction(async (tx) => {
+      // Fetch debt
+      const [existingDebt] = await tx
+        .select()
+        .from(debt)
+        .where(and(eq(debt.id, id), eq(debt.organizationId, orgId)))
+        .limit(1);
 
-    if (!existingDebt) {
-      throw new AppError(
-        ErrorCodes.RES_NOT_FOUND,
-        "Debt not found or access denied",
-        404
-      );
-    }
+      if (!existingDebt) {
+        throw new AppError(
+          ErrorCodes.RES_NOT_FOUND,
+          "Debt not found or access denied",
+          404
+        );
+      }
 
-    // Cannot record payment on paid debt
-    if (existingDebt.status === "paid") {
-      throw new AppError(
-        ErrorCodes.DEBT_CANNOT_MODIFY_PAID,
-        "Cannot record payment on a debt that is already paid off",
-        400
-      );
-    }
+      // Cannot record payment on paid debt
+      if (existingDebt.status === "paid") {
+        throw new AppError(
+          ErrorCodes.DEBT_CANNOT_MODIFY_PAID,
+          "Cannot record payment on a debt that is already paid off",
+          400
+        );
+      }
 
-    const currentBalance = new Decimal(existingDebt.balance);
-    const paymentAmount = new Decimal(paymentData.amount);
+      const currentBalance = new Decimal(existingDebt.balance);
+      const paymentAmount = new Decimal(paymentData.amount);
 
-    // Validate payment doesn't exceed balance
-    if (paymentAmount.greaterThan(currentBalance)) {
-      throw new AppError(
-        ErrorCodes.DEBT_PAYMENT_EXCEEDS_BALANCE,
-        "Payment amount cannot exceed current balance",
-        400
-      );
-    }
+      // Validate payment doesn't exceed balance
+      if (paymentAmount.greaterThan(currentBalance)) {
+        throw new AppError(
+          ErrorCodes.DEBT_PAYMENT_EXCEEDS_BALANCE,
+          "Payment amount cannot exceed current balance",
+          400
+        );
+      }
 
-    // Calculate new balance
-    const newBalance = currentBalance.minus(paymentAmount);
-    const isZeroBalance = newBalance.lessThanOrEqualTo(0);
+      // Calculate new balance
+      const newBalance = currentBalance.minus(paymentAmount);
+      const isZeroBalance = newBalance.lessThanOrEqualTo(0);
 
-    // Update debt
-    const [updated] = await db
-      .update(debt)
-      .set({
-        balance: isZeroBalance ? "0.00" : newBalance.toFixed(2),
-        status: isZeroBalance ? "paid" : existingDebt.status,
-      })
-      .where(and(eq(debt.id, id), eq(debt.organizationId, orgId)))
-      .returning();
+      // Update debt
+      const [updated] = await tx
+        .update(debt)
+        .set({
+          balance: isZeroBalance ? "0.00" : newBalance.toFixed(2),
+          status: isZeroBalance ? "paid" : existingDebt.status,
+        })
+        .where(and(eq(debt.id, id), eq(debt.organizationId, orgId)))
+        .returning();
 
-    if (!updated) {
-      throw new AppError(
-        ErrorCodes.SRV_INTERNAL_ERROR,
-        "Failed to record payment",
-        500
-      );
-    }
+      if (!updated) {
+        throw new AppError(
+          ErrorCodes.SRV_INTERNAL_ERROR,
+          "Failed to record payment",
+          500
+        );
+      }
 
-    // Log payment
-    await auditService.log({
-      userId,
-      organizationId: orgId,
-      action: "PAYMENT_RECORDED",
-      affectedRecordIds: [id],
-      metadata: {
-        amount: paymentData.amount,
-        previousBalance: existingDebt.balance,
-        newBalance: updated.balance,
-        statusChanged: isZeroBalance,
-        newStatus: updated.status,
-      },
-    });
-
-    // Log status change if debt was paid off
-    if (isZeroBalance) {
+      // Log payment (within transaction)
       await auditService.log({
         userId,
         organizationId: orgId,
-        action: "DEBT_STATUS_CHANGED",
+        action: "PAYMENT_RECORDED",
         affectedRecordIds: [id],
         metadata: {
-          previousStatus: existingDebt.status,
-          newStatus: "paid",
-          reason: "Balance reached zero",
+          amount: paymentData.amount,
+          previousBalance: existingDebt.balance,
+          newBalance: updated.balance,
+          statusChanged: isZeroBalance,
+          newStatus: updated.status,
         },
-      });
-    }
+      }, tx);
 
-    // Trigger snowball recalculation
-    await snowballService.recalculateSnowballPositions(orgId, db);
+      // Log status change if debt was paid off (within transaction)
+      if (isZeroBalance) {
+        await auditService.log({
+          userId,
+          organizationId: orgId,
+          action: "DEBT_STATUS_CHANGED",
+          affectedRecordIds: [id],
+          metadata: {
+            previousStatus: existingDebt.status,
+            newStatus: "paid",
+            reason: "Balance reached zero",
+          },
+        }, tx);
+      }
 
-    return updated;
+      // Trigger snowball recalculation (within transaction)
+      await snowballService.recalculateSnowballPositions(orgId, tx);
+
+      return updated;
+    });
   }
 
   /**

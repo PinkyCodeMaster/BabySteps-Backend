@@ -1,5 +1,4 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { debtService } from "../services";
 import { authMiddleware, getAuthContext } from "../middleware/auth.middleware";
 import {
@@ -7,7 +6,6 @@ import {
   updateDebtSchema,
   recordPaymentSchema,
 } from "../db/schema/debts";
-import { z } from "zod";
 
 /**
  * Debt router
@@ -25,22 +23,65 @@ import { z } from "zod";
  * 
  * Requirements: 5.1, 5.3
  */
-const debtRouter = new Hono();
+const debtRouter = new OpenAPIHono();
 
 // All debt routes require authentication
 debtRouter.use("/*", authMiddleware);
 
-/**
- * Query parameters schema for list endpoint
- */
-const listQuerySchema = z.object({
-  page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1),
-  limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 50),
-  sortBy: z.enum(["createdAt", "name", "balance", "snowballPosition"]).optional(),
-  order: z.enum(["asc", "desc"]).optional(),
-  status: z.enum(["active", "paid"]).optional(),
-  isCcj: z.string().optional().transform(val => val === "true" ? true : val === "false" ? false : undefined),
-  type: z.string().optional(),
+// Common schemas
+const OrgIdParamSchema = z.object({
+  orgId: z.string().openapi({ example: 'org_123' }),
+});
+
+const DebtIdParamSchema = z.object({
+  orgId: z.string().openapi({ example: 'org_123' }),
+  id: z.string().openapi({ example: 'debt_456' }),
+});
+
+const ListQuerySchema = z.object({
+  page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1).openapi({ example: '1' }),
+  limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 50).openapi({ example: '50' }),
+  sortBy: z.enum(["createdAt", "name", "balance", "snowballPosition"]).optional().openapi({ example: 'snowballPosition' }),
+  order: z.enum(["asc", "desc"]).optional().openapi({ example: 'asc' }),
+  status: z.enum(["active", "paid"]).optional().openapi({ example: 'active' }),
+  isCcj: z.string().optional().transform(val => val === "true" ? true : val === "false" ? false : undefined).openapi({ example: 'false' }),
+  type: z.string().optional().openapi({ example: 'credit_card' }),
+});
+
+const DebtResponseSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  name: z.string(),
+  type: z.string(),
+  balance: z.string(),
+  interestRate: z.string(),
+  minimumPayment: z.string(),
+  snowballPosition: z.number().nullable(),
+  status: z.string(),
+  isCcj: z.boolean(),
+  ccjDeadline: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+const DebtsListResponseSchema = z.object({
+  debts: z.array(DebtResponseSchema),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+  }),
+});
+
+const MessageResponseSchema = z.object({
+  message: z.string(),
+});
+
+const ErrorResponseSchema = z.object({
+  error: z.object({
+    code: z.string(),
+    message: z.string(),
+  }),
 });
 
 /**
@@ -48,20 +89,41 @@ const listQuerySchema = z.object({
  * 
  * List all debts for an organization with pagination, sorting, and filtering.
  * 
- * Query parameters:
- * - page: Page number (default: 1)
- * - limit: Items per page (default: 50)
- * - sortBy: Sort field (createdAt, name, balance, snowballPosition)
- * - order: Sort order (asc, desc)
- * - status: Filter by status (active, paid)
- * - isCcj: Filter by CCJ status (true/false)
- * - type: Filter by debt type
- * 
  * Requirements: 5.1
  * Property 10: Organization data isolation
  * Property 29: Debts ordered by snowball position
  */
-debtRouter.get("/:orgId/debts", zValidator("query", listQuerySchema), async (c) => {
+const listDebtsRoute = createRoute({
+  method: 'get',
+  path: '/:orgId/debts',
+  tags: ['Debts'],
+  summary: 'List debts',
+  description: 'Returns all debts for an organization with pagination, sorting, and filtering',
+  request: {
+    params: OrgIdParamSchema,
+    query: ListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: 'List of debts',
+      content: {
+        'application/json': {
+          schema: DebtsListResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+debtRouter.openapi(listDebtsRoute, async (c) => {
   const { organizationId } = getAuthContext(c);
   const orgId = c.req.param("orgId");
   const query = c.req.valid("query");
@@ -101,32 +163,64 @@ debtRouter.get("/:orgId/debts", zValidator("query", listQuerySchema), async (c) 
  * Property 24: Debt creation with active status
  * Property 25: CCJ debts require deadline
  */
-debtRouter.post(
-  "/:orgId/debts",
-  zValidator("json", createDebtSchema),
-  async (c) => {
-    const { userId, organizationId } = getAuthContext(c);
-    const orgId = c.req.param("orgId");
-    const data = c.req.valid("json");
-
-    // Verify user is accessing their own organization
-    if (orgId !== organizationId) {
-      return c.json(
-        {
-          error: {
-            code: "AUTHZ_002",
-            message: "Organization not found or access denied",
-          },
+const createDebtRoute = createRoute({
+  method: 'post',
+  path: '/:orgId/debts',
+  tags: ['Debts'],
+  summary: 'Create debt',
+  description: 'Creates a new debt for an organization',
+  request: {
+    params: OrgIdParamSchema,
+    body: {
+      content: {
+        'application/json': {
+          schema: createDebtSchema,
         },
-        403
-      );
-    }
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: 'Created debt',
+      content: {
+        'application/json': {
+          schema: DebtResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
 
-    const created = await debtService.createDebt(orgId, userId, data);
+debtRouter.openapi(createDebtRoute, async (c) => {
+  const { userId, organizationId } = getAuthContext(c);
+  const orgId = c.req.param("orgId");
+  const data = c.req.valid("json");
 
-    return c.json(created, 201);
+  // Verify user is accessing their own organization
+  if (orgId !== organizationId) {
+    return c.json(
+      {
+        error: {
+          code: "AUTHZ_002",
+          message: "Organization not found or access denied",
+        },
+      },
+      403
+    );
   }
-);
+
+  const created = await debtService.createDebt(orgId, userId, data);
+
+  return c.json(created, 201);
+});
 
 /**
  * GET /orgs/:orgId/debts/:id
@@ -136,7 +230,36 @@ debtRouter.post(
  * Requirements: 5.1
  * Property 10: Organization data isolation
  */
-debtRouter.get("/:orgId/debts/:id", async (c) => {
+const getDebtRoute = createRoute({
+  method: 'get',
+  path: '/:orgId/debts/:id',
+  tags: ['Debts'],
+  summary: 'Get debt',
+  description: 'Returns a single debt by ID',
+  request: {
+    params: DebtIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: 'Debt details',
+      content: {
+        'application/json': {
+          schema: DebtResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+debtRouter.openapi(getDebtRoute, async (c) => {
   const { organizationId } = getAuthContext(c);
   const orgId = c.req.param("orgId");
   const debtId = c.req.param("id");
@@ -168,38 +291,70 @@ debtRouter.get("/:orgId/debts/:id", async (c) => {
  * Property 25: CCJ debts require deadline
  * Property 28: Status changes are validated and audited
  */
-debtRouter.patch(
-  "/:orgId/debts/:id",
-  zValidator("json", updateDebtSchema),
-  async (c) => {
-    const { userId, organizationId } = getAuthContext(c);
-    const orgId = c.req.param("orgId");
-    const debtId = c.req.param("id");
-    const data = c.req.valid("json");
-
-    // Verify user is accessing their own organization
-    if (orgId !== organizationId) {
-      return c.json(
-        {
-          error: {
-            code: "AUTHZ_002",
-            message: "Organization not found or access denied",
-          },
+const updateDebtRoute = createRoute({
+  method: 'patch',
+  path: '/:orgId/debts/:id',
+  tags: ['Debts'],
+  summary: 'Update debt',
+  description: 'Updates an existing debt',
+  request: {
+    params: DebtIdParamSchema,
+    body: {
+      content: {
+        'application/json': {
+          schema: updateDebtSchema,
         },
-        403
-      );
-    }
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated debt',
+      content: {
+        'application/json': {
+          schema: DebtResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
 
-    const updated = await debtService.updateDebt(
-      debtId,
-      orgId,
-      userId,
-      data
+debtRouter.openapi(updateDebtRoute, async (c) => {
+  const { userId, organizationId } = getAuthContext(c);
+  const orgId = c.req.param("orgId");
+  const debtId = c.req.param("id");
+  const data = c.req.valid("json");
+
+  // Verify user is accessing their own organization
+  if (orgId !== organizationId) {
+    return c.json(
+      {
+        error: {
+          code: "AUTHZ_002",
+          message: "Organization not found or access denied",
+        },
+      },
+      403
     );
-
-    return c.json(updated, 200);
   }
-);
+
+  const updated = await debtService.updateDebt(
+    debtId,
+    orgId,
+    userId,
+    data
+  );
+
+  return c.json(updated, 200);
+});
 
 /**
  * DELETE /orgs/:orgId/debts/:id
@@ -208,7 +363,36 @@ debtRouter.patch(
  * 
  * Requirements: 5.1
  */
-debtRouter.delete("/:orgId/debts/:id", async (c) => {
+const deleteDebtRoute = createRoute({
+  method: 'delete',
+  path: '/:orgId/debts/:id',
+  tags: ['Debts'],
+  summary: 'Delete debt',
+  description: 'Deletes a debt',
+  request: {
+    params: DebtIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: 'Debt deleted',
+      content: {
+        'application/json': {
+          schema: MessageResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+debtRouter.openapi(deleteDebtRoute, async (c) => {
   const { userId, organizationId } = getAuthContext(c);
   const orgId = c.req.param("orgId");
   const debtId = c.req.param("id");
@@ -241,37 +425,69 @@ debtRouter.delete("/:orgId/debts/:id", async (c) => {
  * Property 27: Zero balance transitions to paid
  * Property 28: Status changes are validated and audited
  */
-debtRouter.post(
-  "/:orgId/debts/:id/payment",
-  zValidator("json", recordPaymentSchema),
-  async (c) => {
-    const { userId, organizationId } = getAuthContext(c);
-    const orgId = c.req.param("orgId");
-    const debtId = c.req.param("id");
-    const data = c.req.valid("json");
-
-    // Verify user is accessing their own organization
-    if (orgId !== organizationId) {
-      return c.json(
-        {
-          error: {
-            code: "AUTHZ_002",
-            message: "Organization not found or access denied",
-          },
+const recordPaymentRoute = createRoute({
+  method: 'post',
+  path: '/:orgId/debts/:id/payment',
+  tags: ['Debts'],
+  summary: 'Record payment',
+  description: 'Records a payment on a debt',
+  request: {
+    params: DebtIdParamSchema,
+    body: {
+      content: {
+        'application/json': {
+          schema: recordPaymentSchema,
         },
-        403
-      );
-    }
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated debt after payment',
+      content: {
+        'application/json': {
+          schema: DebtResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: 'Access denied',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
 
-    const updated = await debtService.recordPayment(
-      debtId,
-      orgId,
-      userId,
-      data
+debtRouter.openapi(recordPaymentRoute, async (c) => {
+  const { userId, organizationId } = getAuthContext(c);
+  const orgId = c.req.param("orgId");
+  const debtId = c.req.param("id");
+  const data = c.req.valid("json");
+
+  // Verify user is accessing their own organization
+  if (orgId !== organizationId) {
+    return c.json(
+      {
+        error: {
+          code: "AUTHZ_002",
+          message: "Organization not found or access denied",
+        },
+      },
+      403
     );
-
-    return c.json(updated, 200);
   }
-);
+
+  const updated = await debtService.recordPayment(
+    debtId,
+    orgId,
+    userId,
+    data
+  );
+
+  return c.json(updated, 200);
+});
 
 export default debtRouter;
