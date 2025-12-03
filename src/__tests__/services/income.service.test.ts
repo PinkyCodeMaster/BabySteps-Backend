@@ -15,9 +15,7 @@ import fc from "fast-check";
  * - Property 15: Net income calculation treatment
  * - Property 16: Income updates respect organization boundaries
  * - Property 17: Income deletion triggers recalculation
- * 
- * Validates: Requirements 3.1, 3.2, 3.4, 3.5, 3.6
- */
+ * */
 
 describe("Income Service - Property Tests", () => {
   let testOrgId: string;
@@ -114,10 +112,7 @@ describe("Income Service - Property Tests", () => {
     await db.delete(income).where(eq(income.organizationId, otherOrgId));
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 12: Income creation with organization association
-   * Validates: Requirements 3.1
-   * 
+  /** * Property 12: Income creation with organization association   * 
    * For any valid income data, creating an income should store it with the user's
    * organization ID and all required fields validated.
    */
@@ -182,10 +177,7 @@ describe("Income Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 13: Frequency validation for income
-   * Validates: Requirements 3.2
-   * 
+  /** * Property 13: Frequency validation for income   * 
    * For any income frequency value, the system should accept only one-time, weekly,
    * fortnightly, monthly, or annual values.
    */
@@ -212,10 +204,7 @@ describe("Income Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 15: Net income calculation treatment
-   * Validates: Requirements 3.4
-   * 
+  /** * Property 15: Net income calculation treatment   * 
    * For any income marked as net, calculations should treat the amount as post-tax
    * without further deductions.
    */
@@ -250,10 +239,7 @@ describe("Income Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 16: Income updates respect organization boundaries
-   * Validates: Requirements 3.5
-   * 
+  /** * Property 16: Income updates respect organization boundaries   * 
    * For any income update request, the system should update only if the income
    * belongs to the user's organization.
    */
@@ -354,10 +340,7 @@ describe("Income Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 17: Income deletion triggers recalculation
-   * Validates: Requirements 3.6
-   * 
+  /** * Property 17: Income deletion triggers recalculation   * 
    * For any income deletion, the system should remove the record and recompute
    * dependent financial projections.
    */
@@ -466,10 +449,7 @@ describe("Income Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 14: Income frequency normalization
-   * Validates: Requirements 3.3
-   * 
+  /** * Property 14: Income frequency normalization   * 
    * For any income with a frequency, converting to monthly equivalent should
    * produce the correct monthly amount based on the frequency.
    */

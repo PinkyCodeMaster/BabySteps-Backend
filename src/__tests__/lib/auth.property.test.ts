@@ -36,8 +36,7 @@ const registrationDataArbitrary = fc.record({
 });
 
 describe("Authentication Property Tests", () => {
-  /**
-   * Feature: debt-snowball-api, Property 1: Registration creates encrypted accounts
+  /** * Property 1: Registration creates encrypted accounts
    * 
    * For any valid registration credentials, creating a user account should result
    * in a user record with encrypted password (not plaintext).
@@ -117,8 +116,7 @@ describe("Authentication Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 2: Login issues valid session tokens
+  /** * Property 2: Login issues valid session tokens
    * 
    * For any registered user with valid credentials, logging in should return
    * a session token that can be used for authenticated requests.
@@ -200,8 +198,7 @@ describe("Authentication Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 3: Session validation attaches user context
+  /** * Property 3: Session validation attaches user context
    * 
    * For any valid session token, making an authenticated request should result
    * in the user's identity and organization being attached to the request context.
@@ -278,8 +275,7 @@ describe("Authentication Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 4: Expired sessions are rejected
+  /** * Property 4: Expired sessions are rejected
    * 
    * For any expired session token, making a request should result in rejection
    * with authentication error.
@@ -350,8 +346,7 @@ describe("Authentication Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 5: Organization membership controls access
+  /** * Property 5: Organization membership controls access
    * 
    * For any user with valid session, accessing protected endpoints should be
    * authorized only if the user has membership in the relevant organization.

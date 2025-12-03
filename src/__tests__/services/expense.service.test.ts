@@ -29,7 +29,6 @@ import {
  * - Property 22: UC-paid expenses excluded from calculations
  * - Property 23: Due day storage
  * 
- * Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6
  */
 
 describe("Expense Service - Property Tests", () => {
@@ -49,9 +48,7 @@ describe("Expense Service - Property Tests", () => {
     await db.delete(expense).where(eq(expense.organizationId, context.otherOrg.orgId));
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 18: Expense creation with organization association
-   * Validates: Requirements 4.1
+  /** * Property 18: Expense creation with organization association
    * 
    * For any valid expense data, creating an expense should store it with the user's
    * organization ID and all required fields validated.
@@ -101,9 +98,7 @@ describe("Expense Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 19: Expense category validation
-   * Validates: Requirements 4.2
+  /** * Property 19: Expense category validation
    * 
    * For any expense category value, the system should accept only housing, utilities,
    * food, transport, insurance, childcare, or other.
@@ -132,9 +127,7 @@ describe("Expense Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 20: Expense priority validation
-   * Validates: Requirements 4.3
+  /** * Property 20: Expense priority validation
    * 
    * For any expense priority value, the system should accept only essential,
    * important, or discretionary.
@@ -163,9 +156,7 @@ describe("Expense Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 22: UC-paid expenses excluded from calculations
-   * Validates: Requirements 4.5
+  /** * Property 22: UC-paid expenses excluded from calculations
    * 
    * For any expense marked as UC-paid, disposable income calculations should exclude it.
    */
@@ -235,9 +226,7 @@ describe("Expense Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 23: Due day storage
-   * Validates: Requirements 4.6
+  /** * Property 23: Due day storage
    * 
    * For any expense with a due day specified, the system should store the day of
    * month (1-31) for payment scheduling.
@@ -289,9 +278,7 @@ describe("Expense Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 21: Expense frequency normalization
-   * Validates: Requirements 4.4
+  /** * Property 21: Expense frequency normalization
    * 
    * For any expense with a frequency, converting to monthly equivalent should
    * produce the correct monthly amount based on the frequency.

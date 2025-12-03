@@ -14,9 +14,7 @@ import {
 
 /**
  * Property-based tests for money utilities
- * 
- * Feature: debt-snowball-api
- * These tests validate the correctness properties for money handling:
+ * * * These tests validate the correctness properties for money handling:
  * - Property 56: Decimal precision for money storage
  * - Property 59: Money formatting consistency
  * - Property 60: Calculation precision maintenance
@@ -42,14 +40,11 @@ const factorArbitrary = fc.double({
 });
 
 describe("Money Utilities - Property-Based Tests", () => {
-  /**
-   * Feature: debt-snowball-api, Property 56: Decimal precision for money storage
+  /** * Property 56: Decimal precision for money storage
    * 
    * For any monetary amount stored, the system should use decimal precision
    * (not floating-point) to avoid rounding errors.
-   * 
-   * Validates: Requirements 12.1
-   */
+   *   */
   describe("Property 56: Decimal precision for money storage", () => {
     test("money() should create Decimal instances, not floating-point numbers", () => {
       fc.assert(
@@ -121,14 +116,11 @@ describe("Money Utilities - Property-Based Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 59: Money formatting consistency
+  /** * Property 59: Money formatting consistency
    * 
    * For any monetary amount displayed, the format should include two decimal
    * places and GBP currency symbol.
-   * 
-   * Validates: Requirements 12.4
-   */
+   *   */
   describe("Property 59: Money formatting consistency", () => {
     test("formatMoney() should always include GBP symbol", () => {
       fc.assert(
@@ -220,14 +212,11 @@ describe("Money Utilities - Property-Based Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 60: Calculation precision maintenance
+  /** * Property 60: Calculation precision maintenance
    * 
    * For any arithmetic operation on money, the system should maintain decimal
    * precision throughout all intermediate calculations.
-   * 
-   * Validates: Requirements 12.5
-   */
+   *   */
   describe("Property 60: Calculation precision maintenance", () => {
     test("addMoney() should maintain precision", () => {
       fc.assert(

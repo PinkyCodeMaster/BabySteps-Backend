@@ -131,10 +131,7 @@ describe("Organization Service", () => {
     await db.delete(user).where(eq(user.id, otherUserId));
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 10: Organization data isolation
-   * Validates: Requirements 2.5
-   * 
+  /** * Property 10: Organization data isolation   * 
    * For any user querying organization-scoped data, the results should contain
    * only records belonging to their organization.
    */
@@ -178,10 +175,7 @@ describe("Organization Service", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 11: Non-admin operations are rejected
-   * Validates: Requirements 2.6
-   * 
+  /** * Property 11: Non-admin operations are rejected   * 
    * For any non-admin user attempting admin operations, the request should be
    * rejected with authorization error.
    */
@@ -215,10 +209,7 @@ describe("Organization Service", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 9: Role changes apply immediately
-   * Validates: Requirements 2.4
-   * 
+  /** * Property 9: Role changes apply immediately   * 
    * For any membership role change by admin, the new permissions should be
    * enforced on the next request.
    */

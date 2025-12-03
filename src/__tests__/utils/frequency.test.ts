@@ -10,9 +10,7 @@ import {
 
 /**
  * Property-based tests for frequency conversion utilities
- * 
- * Feature: debt-snowball-api
- * These tests validate the correctness properties for frequency normalization:
+ * * * These tests validate the correctness properties for frequency normalization:
  * - Property 14: Income frequency normalization
  * - Property 21: Expense frequency normalization
  */
@@ -41,15 +39,11 @@ const allFrequencyArbitrary = fc.constantFrom<Frequency>(
 );
 
 describe("Frequency Conversion - Property-Based Tests", () => {
-  /**
-   * Feature: debt-snowball-api, Property 14: Income frequency normalization
-   * Feature: debt-snowball-api, Property 21: Expense frequency normalization
+  /** * Property 14: Income frequency normalization * Property 21: Expense frequency normalization
    * 
    * For any income/expense with a frequency, converting to monthly equivalent
    * should produce the correct monthly amount based on the frequency.
-   * 
-   * Validates: Requirements 3.3, 4.4
-   */
+   *   */
   describe("Property 14 & 21: Frequency normalization", () => {
     test("toMonthlyEquivalent() should produce correct monthly amounts for all frequencies", () => {
       fc.assert(

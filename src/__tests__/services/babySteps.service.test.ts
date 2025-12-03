@@ -50,8 +50,7 @@ describe("Baby Steps Service - Property Tests", () => {
     await db.delete(expense).where(eq(expense.organizationId, context.otherOrg.orgId));
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 41: Baby Steps status includes progress data
+  /** * Property 41: Baby Steps status includes progress data
    * 
    * For any Baby Steps query, the response should include current step and progress data
    * including emergency fund amount saved.
@@ -97,8 +96,7 @@ describe("Baby Steps Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 42: Step 1 progress tracking
+  /** * Property 42: Step 1 progress tracking
    * 
    * For any organization on step 1, the system should track progress toward
    * the starter emergency fund target amount.
@@ -136,8 +134,7 @@ describe("Baby Steps Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 43: Step 1 completion allows progression
+  /** * Property 43: Step 1 completion allows progression
    * 
    * For any organization completing the step 1 emergency fund target,
    * the system should allow progression to step 2.
@@ -217,8 +214,7 @@ describe("Baby Steps Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 44: Step 2 requires debt payoff
+  /** * Property 44: Step 2 requires debt payoff
    * 
    * For any organization on step 2, advancing to step 3 should be blocked
    * until all debts except mortgage are paid.
@@ -320,8 +316,7 @@ describe("Baby Steps Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 45: Step 3 progress tracking
+  /** * Property 45: Step 3 progress tracking
    * 
    * For any organization on step 3, the system should track progress toward
    * the full emergency fund target of three to six months expenses.
@@ -385,8 +380,7 @@ describe("Baby Steps Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 46: Baby Steps progress validation
+  /** * Property 46: Baby Steps progress validation
    * 
    * For any Baby Steps progress update, the system should validate it against
    * step requirements before storing.
@@ -395,7 +389,7 @@ describe("Baby Steps Service - Property Tests", () => {
     test("Rejects negative emergency fund amounts", async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.double({ min: -10000, max: -0.01 }),
+          fc.double({ min: -10000, max: -0.01, noNaN: true }),
           async (negativeAmount) => {
             // Property: Negative emergency fund should be rejected
             await expect(
@@ -474,8 +468,7 @@ describe("Baby Steps Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 47: Baby Steps feature gating
+  /** * Property 47: Baby Steps feature gating
    * 
    * For any feature gated by Baby Steps, the system should enforce gating rules
    * based on current step.

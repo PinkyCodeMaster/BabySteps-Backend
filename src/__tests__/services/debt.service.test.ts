@@ -47,8 +47,7 @@ describe("Debt Service - Property Tests", () => {
     await db.delete(debt).where(eq(debt.organizationId, context.otherOrg.orgId));
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 24: Debt creation with active status
+  /** * Property 24: Debt creation with active status
    * 
    * For any valid debt data, creating a debt should store it with status of active
    * and all required fields.
@@ -99,8 +98,7 @@ describe("Debt Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 25: CCJ debts require deadline
+  /** * Property 25: CCJ debts require deadline
    * 
    * For any debt marked as CCJ, the system should require a CCJ deadline date
    * and reject creation without it.
@@ -176,8 +174,7 @@ describe("Debt Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 26: Payment recording reduces balance
+  /** * Property 26: Payment recording reduces balance
    * 
    * For any debt payment, recording it should reduce the debt balance by the
    * payment amount.
@@ -260,8 +257,7 @@ describe("Debt Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 27: Zero balance transitions to paid
+  /** * Property 27: Zero balance transitions to paid
    * 
    * For any debt with balance reaching zero, the system should transition the
    * status to paid and exclude it from active calculations.
@@ -373,8 +369,7 @@ describe("Debt Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 28: Status changes are validated and audited
+  /** * Property 28: Status changes are validated and audited
    * 
    * For any debt status change, the system should validate the transition is valid
    * and create an audit log entry.
@@ -418,8 +413,7 @@ describe("Debt Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 29: Debts ordered by snowball position
+  /** * Property 29: Debts ordered by snowball position
    * 
    * For any debt query, the results should be ordered by snowball position.
    */

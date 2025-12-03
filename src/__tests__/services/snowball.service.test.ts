@@ -18,9 +18,7 @@ import fc from "fast-check";
  * - Property 32: Payment rollover on debt payoff
  * - Property 33: Monthly payment calculation
  * - Property 35: Debt-free date projection accuracy
- * 
- * Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.6
- */
+ * */
 
 // Helper to create a debt record
 function createDebt(
@@ -92,10 +90,7 @@ const ccjDebtArb = fc.record({
 ));
 
 describe("Snowball Service - Property Tests", () => {
-  /**
-   * Feature: debt-snowball-api, Property 30: CCJ debts prioritized by deadline
-   * Validates: Requirements 6.1
-   * 
+  /** * Property 30: CCJ debts prioritized by deadline   * 
    * For any set of debts including CCJ debts, the snowball order should prioritize
    * CCJ debts by earliest deadline first.
    */
@@ -166,10 +161,7 @@ describe("Snowball Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 31: Non-CCJ debts ordered by balance
-   * Validates: Requirements 6.2
-   * 
+  /** * Property 31: Non-CCJ debts ordered by balance   * 
    * For any set of non-CCJ debts, the snowball order should sort them by
    * smallest balance first.
    */
@@ -211,10 +203,7 @@ describe("Snowball Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 32: Payment rollover on debt payoff
-   * Validates: Requirements 6.3
-   * 
+  /** * Property 32: Payment rollover on debt payoff   * 
    * For any debt that is paid off, the system should roll over its payment amount
    * to the next debt in the snowball.
    */
@@ -257,10 +246,7 @@ describe("Snowball Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 33: Monthly payment calculation
-   * Validates: Requirements 6.4
-   * 
+  /** * Property 33: Monthly payment calculation   * 
    * For any set of debts and disposable income, the monthly payment should equal
    * the sum of all minimum payments plus extra payment on the focused debt.
    */
@@ -365,10 +351,7 @@ describe("Snowball Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 35: Debt-free date projection accuracy
-   * Validates: Requirements 6.6
-   * 
+  /** * Property 35: Debt-free date projection accuracy   * 
    * For any set of debts and monthly payment amount, the projected debt-free date
    * should be the month and year when all debts reach zero balance accounting for interest.
    */
@@ -553,9 +536,7 @@ describe("Snowball Service - Property Tests", () => {
  * - All non-CCJ debts
  * - Single debt
  * - Empty debt list
- * 
- * Validates: Requirements 6.1, 6.2
- */
+ * */
 describe("Snowball Service - Edge Case Unit Tests", () => {
   describe("Edge Case: Mixed CCJ and non-CCJ debts", () => {
     test("Multiple CCJ debts with different deadlines and non-CCJ debts", () => {
@@ -808,10 +789,7 @@ describe("Snowball Service - Edge Case Unit Tests", () => {
 
 /**
  * Property Test for Snowball Recalculation Trigger
- * 
- * Feature: debt-snowball-api, Property 34: Recalculation on financial data changes
- * Validates: Requirements 6.5
- * 
+ * * Property 34: Recalculation on financial data changes * 
  * For any change to income, expense, or debt data, the system should recompute
  * the debt snowball schedule and debt-free date.
  * 
@@ -819,10 +797,7 @@ describe("Snowball Service - Edge Case Unit Tests", () => {
  * Integration tests in debt/income/expense service tests verify the triggers are called.
  */
 describe("Snowball Service - Recalculation Trigger Property Test", () => {
-  /**
-   * Feature: debt-snowball-api, Property 34: Recalculation on financial data changes
-   * Validates: Requirements 6.5
-   */
+  /** * Property 34: Recalculation on financial data changes   */
   test("Property 34: Recalculation updates snowball positions correctly", async () => {
     // Import required modules
     const { db } = await import("../../db");

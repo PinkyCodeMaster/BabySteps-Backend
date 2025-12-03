@@ -10,9 +10,7 @@ import { calculateTaper, calculateDisposableIncome } from "../../services/uc.ser
  * - Income exactly equal to work allowance (zero taper)
  * - Income above work allowance (positive taper)
  * - Negative disposable income scenario
- * 
- * Validates: Requirements 7.5
- */
+ * */
 
 describe("UC Service - Edge Case Unit Tests", () => {
   /**

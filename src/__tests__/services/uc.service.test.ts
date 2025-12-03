@@ -16,9 +16,7 @@ import { expenseService } from "../../services/expense.service";
  * - Property 37: UC taper calculation formula
  * - Property 38: Disposable income includes UC taper
  * - Property 39: UC-paid expenses excluded from disposable income
- * 
- * Validates: Requirements 7.1, 7.2, 7.3, 7.4
- */
+ * */
 
 // Arbitrary for generating monetary amounts
 const moneyArbitrary = fc
@@ -98,10 +96,7 @@ describe("UC Service - Property Tests", () => {
     await db.delete(ucConfig).where(eq(ucConfig.id, testConfigId));
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 36: UC taper uses configurable parameters
-   * Validates: Requirements 7.1
-   * 
+  /** * Property 36: UC taper uses configurable parameters   * 
    * For any UC taper calculation, the system should use the current UC config
    * values for taper rate and work allowance.
    */
@@ -183,10 +178,7 @@ describe("UC Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 37: UC taper calculation formula
-   * Validates: Requirements 7.2
-   * 
+  /** * Property 37: UC taper calculation formula   * 
    * For any income above work allowance, the UC reduction should equal
    * (income - work allowance) × taper rate.
    */
@@ -307,10 +299,7 @@ describe("UC Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 38: Disposable income includes UC taper
-   * Validates: Requirements 7.3
-   * 
+  /** * Property 38: Disposable income includes UC taper   * 
    * For any disposable income calculation, the result should equal
    * gross income minus expenses minus UC taper amount.
    */
@@ -444,10 +433,7 @@ describe("UC Service - Property Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 39: UC-paid expenses excluded from disposable income
-   * Validates: Requirements 7.4
-   * 
+  /** * Property 39: UC-paid expenses excluded from disposable income   * 
    * For any set of expenses including UC-paid ones, disposable income calculation
    * should exclude UC-paid expenses.
    */

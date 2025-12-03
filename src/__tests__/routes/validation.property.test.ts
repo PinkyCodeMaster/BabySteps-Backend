@@ -23,24 +23,19 @@ import {
 
 /**
  * Property-Based Tests for Request/Response Validation
- * 
- * Feature: debt-snowball-api
- * These tests validate the correctness properties for validation:
+ * * * These tests validate the correctness properties for validation:
  * - Property 48: Request validation against Zod schemas
  * - Property 49: Validation errors return 400 with details
  * - Property 50: Response schema conformance
  * 
- * Validates: Requirements 9.4, 9.5, 9.6
  */
 
 describe("Validation - Property-Based Tests", () => {
-  /**
-   * Feature: debt-snowball-api, Property 48: Request validation against Zod schemas
+  /** * Property 48: Request validation against Zod schemas
    * 
    * For any endpoint request, the system should validate the request body against
    * the Zod schema and reject invalid requests.
    * 
-   * Validates: Requirements 9.4
    */
   describe("Property 48: Request validation against Zod schemas", () => {
     test("Valid income data passes schema validation", () => {
@@ -378,13 +373,11 @@ describe("Validation - Property-Based Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 49: Validation errors return 400 with details
+  /** * Property 49: Validation errors return 400 with details
    * 
    * For any request failing validation, the system should return a 400 status code
    * with detailed validation messages.
    * 
-   * Validates: Requirements 9.5
    */
   describe("Property 49: Validation errors return 400 with details", () => {
     test("Validation errors include field-level details", () => {
@@ -566,12 +559,10 @@ describe("Validation - Property-Based Tests", () => {
     });
   });
 
-  /**
-   * Feature: debt-snowball-api, Property 50: Response schema conformance
+  /** * Property 50: Response schema conformance
    * 
    * For any endpoint response, the data should conform to the documented response schema.
    * 
-   * Validates: Requirements 9.6
    */
   describe("Property 50: Response schema conformance", () => {
     // Define response schemas
