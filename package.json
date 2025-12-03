@@ -9,7 +9,7 @@
     "start": "bun run dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "bun run scripts/migrate.ts",
     "db:push:test": "bun run scripts/db-push-test.ts",
     "db:verify": "bun run scripts/verify-schema.ts",
     "auth:generate": "npx @better-auth/cli generate --config ./src/lib/auth.ts --output ./src/db/schema/users.ts -y",

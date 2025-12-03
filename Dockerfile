@@ -32,7 +32,8 @@ COPY --from=builder --chown=bunuser:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=bunuser:nodejs /app/package.json ./
 COPY --from=builder --chown=bunuser:nodejs /app/drizzle.config.ts ./
 
-# Copy database schema files (needed for migrations at runtime)
+# Copy migration script and database schema files
+COPY --from=builder --chown=bunuser:nodejs /app/scripts/migrate.ts ./scripts/migrate.ts
 COPY --from=builder --chown=bunuser:nodejs /app/src/db ./src/db
 
 # Switch to non-root user

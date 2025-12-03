@@ -138,8 +138,9 @@ bun test --grep "property"
 ### Deployment
 - [Deployment Guide](./DEPLOYMENT.md) - Step-by-step deployment instructions for all platforms
 - [Deployment Checklist](./DEPLOYMENT_CHECKLIST.md) - Pre-deployment verification checklist
+- [Deployment Fixes Summary](./DEPLOYMENT_FIXES_SUMMARY.md) - Recent deployment fixes and solutions
 - [Docker Build Notes](./DOCKER_BUILD_NOTES.md) - Docker build guide and troubleshooting
-- [Docker Fix Summary](./DOCKER_FIX_SUMMARY.md) - Recent Docker build fix details
+- [Docker Fix Summary](./DOCKER_FIX_SUMMARY.md) - Detailed Docker fix documentation
 
 ### CI/CD & Monitoring
 - [CI/CD Setup](./CI_CD_SETUP.md) - Complete CI/CD pipeline configuration
