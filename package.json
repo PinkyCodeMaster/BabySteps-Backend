@@ -9,7 +9,7 @@
     "start": "bun run dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:migrate": "bun run scripts/migrate.ts",
+    "db:migrate": "drizzle-kit migrate",
     "db:push:test": "bun run scripts/db-push-test.ts",
     "db:verify": "bun run scripts/verify-schema.ts",
     "auth:generate": "npx @better-auth/cli generate --config ./src/lib/auth.ts --output ./src/db/schema/users.ts -y",
@@ -43,6 +43,7 @@
     "better-auth": "^1.4.4",
     "decimal.js": "^10.6.0",
     "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.7",
     "drizzle-orm": "^0.44.7",
     "drizzle-zod": "^0.8.3",
     "fast-check": "^4.3.0",
@@ -57,7 +58,6 @@
     "@types/ioredis": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^8.48.1",
     "@typescript-eslint/parser": "^8.48.1",
-    "drizzle-kit": "^0.31.7",
     "eslint": "^9.39.1",
     "tsx": "^4.21.0"
   }

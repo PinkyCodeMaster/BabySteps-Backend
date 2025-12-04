@@ -134,6 +134,8 @@ bun test --grep "property"
 - [Setup Guide](./SETUP.md) - Initial project setup documentation
 - [Environment Variables](./ENVIRONMENT_VARIABLES.md) - Complete guide to all environment variables
 - [Environment Setup](./ENVIRONMENT_SETUP.md) - Detailed environment configuration for staging and production
+- [Migration Approach](./MIGRATION_APPROACH.md) - Database migration using drizzle-kit (recommended)
+- [Migration Strategy](./MIGRATION_STRATEGY.md) - Alternative programmatic migration approach
 
 ### Deployment
 - [Deployment Guide](./DEPLOYMENT.md) - Step-by-step deployment instructions for all platforms

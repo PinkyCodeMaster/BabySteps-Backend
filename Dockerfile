@@ -14,8 +14,8 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
-# Ensure drizzle directory exists (create if migrations haven't been generated yet)
-RUN mkdir -p drizzle/meta
+# Ensure drizzle directory exists (migrations should be in source, but create if missing)
+RUN test -f drizzle/meta/_journal.json || mkdir -p drizzle/meta
 
 # Production image
 FROM base AS runner
