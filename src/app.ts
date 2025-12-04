@@ -44,6 +44,12 @@ app.onError(handleError);
 // Register public routes (no auth required)
 app.route('/health', healthRouter);
 
+// Register test routes (REMOVE IN PRODUCTION!)
+if (process.env.NODE_ENV !== 'production') {
+  const testRouter = await import('./routes/test.router');
+  app.route('/api/v1', testRouter.default);
+}
+
 // Register auth routes with stricter rate limiting
 app.use('/api/v1/auth/*', authRateLimit());
 app.route('/api/v1/auth', authRouter);
